@@ -80,7 +80,7 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
-        let gcc = gcc::Config::new();
+        let gcc = gcc::Build::new();
         let (cc, cflags) = if target.contains("i686") {
             (format!("{} -m32", gcc.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")))
@@ -88,7 +88,6 @@ fn main() {
             (format!("{}", gcc.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")))
         };
-        let cflags = format!("{} -fPIC", cflags);
         let prefix_arg = format!("--prefix={}", install_dir);
         let host = unwrap!(env::var("HOST"));
         let host_arg = format!("--host={}", target);
