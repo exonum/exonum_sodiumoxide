@@ -26,3 +26,4 @@ unwrap = "1.1.0"
 [lib]
 name = "libsodium_sys"
 path = "lib.rs"
+crate-type = ["dylib"]

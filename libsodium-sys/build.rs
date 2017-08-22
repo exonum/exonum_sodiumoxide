@@ -88,6 +88,7 @@ fn main() {
             (format!("{}", gcc.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")))
         };
+        let cflags = format!("{} -fPIC", cflags);
         let prefix_arg = format!("--prefix={}", install_dir);
         let host = unwrap!(env::var("HOST"));
         let host_arg = format!("--host={}", target);
@@ -123,7 +124,7 @@ fn main() {
             .env("CFLAGS", &cflags)
             .arg(&prefix_arg)
             .arg(&host_arg)
-            .arg("--enable-shared=no")
+            .arg("--enable-static=no")
             .arg(disable_pie_arg)
             .output()
             .unwrap_or_else(|error| {
@@ -179,7 +180,7 @@ fn main() {
                    String::from_utf8_lossy(&install_output.stderr));
         }
 
-        println!("cargo:rustc-link-lib=static=sodium");
+        println!("cargo:rustc-link-lib=dylib=sodium");
         println!("cargo:rustc-link-search=native={}/lib", install_dir);
         println!("cargo:include={}/include", install_dir);
     }
