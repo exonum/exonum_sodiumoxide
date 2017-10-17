@@ -207,7 +207,7 @@ fn check_powershell_version() {
     let mut check_ps_version_cmd = ::std::process::Command::new("powershell");
     let check_ps_version_output = check_ps_version_cmd
         .arg("-Command")
-        .arg("If ($PSVersionTable.PSVersion.Major -lt 4) { exit 1 }")
+        .arg("{If ($PSVersionTable.PSVersion.Major -lt 4) { exit 1 }}")
         .output()
         .unwrap_or_else(|error| {
             panic!("Failed to run powershell command: {}", error);
