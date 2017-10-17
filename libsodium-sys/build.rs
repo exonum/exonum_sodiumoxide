@@ -232,9 +232,9 @@ fn download_compressed_file() -> String {
     };
     let url = "https://download.libsodium.org/libsodium/releases/".to_string() + &zip_filename;
     let zip_path = get_install_dir() + "/" + &zip_filename;
-    let command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
+    let command = "{([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
                ((New-Object System.Net.WebClient).DownloadFile(\""
-        .to_string() + &url + "\", \"" + &zip_path + "\"))";
+        .to_string() + &url + "\", \"" + &zip_path + "\"))}";
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
         .arg("-Command")
