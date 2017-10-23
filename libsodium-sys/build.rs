@@ -80,7 +80,7 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
-        let gcc = gcc::Config::new();
+        let gcc = gcc::Build::new();
         let (cc, cflags) = if target.contains("i686") {
             (format!("{} -m32", gcc.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")))
@@ -123,7 +123,7 @@ fn main() {
             .env("CFLAGS", &cflags)
             .arg(&prefix_arg)
             .arg(&host_arg)
-            .arg("--enable-shared=no")
+            .arg("--enable-static=no")
             .arg(disable_pie_arg)
             .output()
             .unwrap_or_else(|error| {
@@ -179,7 +179,7 @@ fn main() {
                    String::from_utf8_lossy(&install_output.stderr));
         }
 
-        println!("cargo:rustc-link-lib=static=sodium");
+        println!("cargo:rustc-link-lib=dylib=sodium");
         println!("cargo:rustc-link-search=native={}/lib", install_dir);
         println!("cargo:include={}/include", install_dir);
     }
