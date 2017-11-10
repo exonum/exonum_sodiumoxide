@@ -54,7 +54,11 @@ Several [optional features](http://doc.crates.io/manifest.html#usage-in-end-prod
 
 Examples
 --------
-TBD
+```rust
+extern crate exonum_sodiumoxide;
+
+exonum_sodiumoxide::init();
+```
 
 Join in
 =======
