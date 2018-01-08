@@ -8,16 +8,17 @@ license = "MIT OR Apache-2.0"
 links = "sodium"
 name = "exonum_libsodium-sys"
 repository = "https://github.com/exonum/exonum_sodiumoxide.git"
-version = "0.0.14"
+version = "0.0.16"
 
 [build-dependencies]
 pkg-config = "0.3"
 unwrap = "1.1.0"
-gcc = "0.3.50"
 flate2 = "0.2.19"
 libc = "0.2"
 tar = "0.4.13"
 zip = "0.2.3"
+num_cpus = "1.8"
+cc = { version = "1.0", features = ["parallel"] }
 
 [dependencies]
 libc = "0.2"

@@ -7,11 +7,11 @@ license = "MIT OR Apache-2.0"
 name = "exonum_sodiumoxide"
 readme = "README.md"
 repository = "https://github.com/exonum/exonum_sodiumoxide"
-version = "0.0.14"
+version = "0.0.16"
 
 [dependencies]
 libc = "0.2"
-exonum_libsodium-sys = { version = "0.0.14", path = "libsodium-sys" }
+exonum_libsodium-sys = { version = "0.0.16", path = "libsodium-sys" }
 serde = { version="1", optional = true }
 
 [dev-dependencies]

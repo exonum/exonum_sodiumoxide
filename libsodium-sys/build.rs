@@ -1,8 +1,9 @@
 #[macro_use]
 extern crate unwrap;
 extern crate pkg_config;
+extern crate num_cpus;
 
-const VERSION: &'static str = "1.0.13";
+const VERSION: &'static str = "1.0.16";
 const MIN_VERSION: &'static str = "1.0.12";
 
 #[cfg(not(windows))]
@@ -80,12 +81,12 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
-        let gcc = gcc::Config::new();
+        let build = cc::Build::new();
         let (cc, cflags) = if target.contains("i686") {
-            (format!("{} -m32", gcc.get_compiler().path().display()),
+            (format!("{} -m32", build.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")))
         } else {
-            (format!("{}", gcc.get_compiler().path().display()),
+            (format!("{}", build.get_compiler().path().display()),
              env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")))
         };
         let prefix_arg = format!("--prefix={}", install_dir);
@@ -140,7 +141,7 @@ fn main() {
         }
 
         // Run `make check`, or `make all` if we're cross-compiling
-        let j_arg = format!("-j{}", unwrap!(env::var("NUM_JOBS")));
+        let j_arg = format!("-j{}", num_cpus::get());
         let make_arg = if cross_compiling { "all" } else { "check" };
         let mut make_cmd = Command::new("make");
         let make_output = make_cmd
@@ -186,7 +187,7 @@ fn main() {
 }
 
 #[cfg(all(not(windows), not(feature = "use-installed-libsodium")))]
-extern crate gcc;
+extern crate cc;
 #[cfg(all(not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
 extern crate flate2;
 #[cfg(all(not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
