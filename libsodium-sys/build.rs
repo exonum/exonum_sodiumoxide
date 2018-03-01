@@ -108,8 +108,10 @@ fn main() {
                 let stdout = String::from_utf8_lossy(&id_output.stdout);
                 let mut lines = stdout.lines();
                 if lines.next() == Some("Ubuntu") {
-                    let v = unwrap!(unwrap!(unwrap!(lines.next()).split('.').next()).parse::<u32>());
-                    if v < 15 { "--disable-pie" } else { "" }
+                    let version = unwrap!(lines.next());
+                    let v = unwrap!(unwrap!(version.split('.').next()).parse::<u32>());
+                    // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
+                    if v < 15 || version == "16.04" { "--disable-pie" } else { "" }
                 } else {
                     "--disable-pie"
                 }
