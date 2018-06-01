@@ -152,22 +152,32 @@ pub fn verify_detached(
     }
 }
 
-/// Converts Ed25519 keypair to Curve25519 keyipair.
-pub fn convert_ed_keys_to_curve25519(
+/// Convert Ed25519 public key to Curve25519 public key.
+pub fn convert_ed_pk_to_curve25519(pk: PublicKey) -> [u8; SCALARMULTBYTES] {
+    let pk = clone_into_array(&pk[..]);
+    let mut curve_pk = [0; SCALARMULTBYTES];
+    unsafe {
+        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &pk)
+    }
+    curve_pk
+}
+
+/// Convert Ed25519 secret key to Curve25519 secret key.
+pub fn convert_ed_sk_to_curve25519(sk: SecretKey) -> [u8; SCALARMULTBYTES] {
+    let sk = clone_into_array(&sk[..SCALARMULTBYTES]);
+    let mut curve_sk = [0; SCALARMULTBYTES];
+     unsafe {
+        ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, &sk)
+    }
+    curve_sk
+}
+
+/// Converts Ed25519 keypair to Curve25519 keypair.
+pub fn convert_ed_keypair_to_curve25519(
     pk: PublicKey,
     sk: SecretKey
 ) -> ([u8; SCALARMULTBYTES], [u8; SCALARMULTBYTES]) {
-    let pk = clone_into_array(&pk[..]);
-    let sk = clone_into_array(&sk[..SCALARMULTBYTES]);
-
-    let mut curve_pk = [0; SCALARMULTBYTES];
-    let mut curve_sk = [0; SCALARMULTBYTES];
-    unsafe {
-        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &pk);
-        ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, &sk);
-    }
-
-    (curve_pk, curve_sk)
+    (convert_ed_pk_to_curve25519(pk), convert_ed_sk_to_curve25519(sk))
 }
 
 // Clone slice into array.
@@ -446,7 +456,7 @@ mod test {
         use crypto::scalarmult::curve25519::{Scalar, GroupElement, scalarmult_base};
 
         let (pk, sk) = gen_keypair();
-        let (pk, sk) = convert_ed_keys_to_curve25519(pk, sk);
+        let (pk, sk) = convert_ed_keypair_to_curve25519(pk, sk);
 
         let secret_key = Scalar::from_slice(&sk).unwrap();
         let GroupElement(public_key) = scalarmult_base(&secret_key);
