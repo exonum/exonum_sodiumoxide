@@ -59,6 +59,12 @@ extern {
     pub fn crypto_sign_ed25519ph_final_verify(state: *mut crypto_sign_ed25519ph_state,
         sig: *const u8,
         pk: *const [u8; crypto_sign_ed25519_PUBLICKEYBYTES]) -> c_int;
+
+    pub fn crypto_sign_ed25519_pk_to_curve25519(curve25519_sk: *mut [u8; crypto_scalarmult_curve25519_BYTES],
+        ed25519_sk: *const [u8; crypto_scalarmult_curve25519_BYTES]);
+
+    pub fn crypto_sign_ed25519_sk_to_curve25519(curve25519_sk: *mut [u8; crypto_scalarmult_curve25519_BYTES],
+        ed25519_sk: *const [u8; crypto_scalarmult_curve25519_BYTES]);
 }
 
 
