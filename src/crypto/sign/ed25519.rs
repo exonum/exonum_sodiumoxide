@@ -157,14 +157,14 @@ pub fn convert_ed_keys_to_curve25519(
     pk: PublicKey,
     sk: SecretKey
 ) -> ([u8; SCALARMULTBYTES], [u8; SCALARMULTBYTES]) {
-    let mut pk = clone_into_array(&pk[..]);
-    let mut sk = clone_into_array(&sk[..SCALARMULTBYTES]);
+    let pk = clone_into_array(&pk[..]);
+    let sk = clone_into_array(&sk[..SCALARMULTBYTES]);
 
     let mut curve_pk = [0; SCALARMULTBYTES];
     let mut curve_sk = [0; SCALARMULTBYTES];
     unsafe {
-        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &mut pk);
-        ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, &mut sk);
+        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &pk);
+        ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, &sk);
     }
 
     (curve_pk, curve_sk)
