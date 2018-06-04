@@ -153,10 +153,10 @@ pub fn verify_detached(
 }
 
 /// Convert Ed25519 public key to Curve25519 public key.
-pub fn convert_ed_pk_to_curve25519(PublicKey(ref pk): PublicKey) -> [u8; SCALARMULTBYTES] {
+pub fn convert_ed_pk_to_curve25519(pk: PublicKey) -> [u8; SCALARMULTBYTES] {
     let mut curve_pk = [0; SCALARMULTBYTES];
     unsafe {
-        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, pk)
+        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &pk.0)
     }
     curve_pk
 }
