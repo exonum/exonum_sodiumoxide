@@ -8,23 +8,39 @@ const MIN_VERSION: &'static str = "1.0.12";
 fn main() {
     use std::env;
 
-    if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-        println!("cargo:rustc-link-search=native={}", lib_dir);
-        let mode = match env::var_os("SODIUM_STATIC") {
-            Some(_) => "static",
-            None => "dylib",
-        };
-        println!("cargo:rustc-link-lib={0}=sodium", mode);
-        println!("cargo:warning=Using unknown libsodium version. This crate is tested against \
-                  {} and may not be fully compatible with other versions.", VERSION);
-    } else if let Ok(lib_details) = pkg_config::Config::new().atleast_version(MIN_VERSION).probe("libsodium") {
-        println!(" === found libsodium: {:#?}", lib_details);
-        if lib_details.version != VERSION {
-            println!("cargo:warning=Using libsodium version {}. This crate is tested against {} \
-                      and may not be fully compatible with {}.", lib_details.version, VERSION,
-                      lib_details.version);
-        }
+    let mut should_build = false;
+
+    let force_build = match env::var("SODIUM_BUILD").ok() {
+        None => false,
+        Some(ref x) if x == "0" => false,
+        Some(_) => true,
+    };
+
+    if force_build {
+        should_build = true;
     } else {
+        if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
+            println!("cargo:rustc-link-search=native={}", lib_dir);
+            let mode = match env::var_os("SODIUM_STATIC") {
+                Some(_) => "static",
+                None => "dylib",
+            };
+            println!("cargo:rustc-link-lib={0}=sodium", mode);
+            println!("cargo:warning=Using unknown libsodium version. This crate is tested against \
+                      {} and may not be fully compatible with other versions.", VERSION);
+        } else if let Ok(lib_details) = pkg_config::Config::new().atleast_version(MIN_VERSION).probe("libsodium") {
+            println!(" === found libsodium: {:#?}", lib_details);
+            if lib_details.version != VERSION {
+                println!("cargo:warning=Using libsodium version {}. This crate is tested against {} \
+                          and may not be fully compatible with {}.", lib_details.version, VERSION,
+                         lib_details.version);
+            }
+        } else {
+            should_build = true;
+        }
+    }
+
+    if should_build {
         use std::env;
         use std::fs::{self, File};
         use std::process::Command;
