@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "exonum_sodiumoxide"
 readme = "README.md"
 repository = "https://github.com/exonum/exonum_sodiumoxide"
-version = "0.0.18"
+version = "0.0.19"
 
 [badges]
 appveyor = { repository = "exonum/exonum_sodiumoxide" }
@@ -15,7 +15,7 @@ travis-ci = { repository = "exonum/exonum_sodiumoxide" }
 
 [dependencies]
 libc = "0.2"
-exonum_libsodium-sys = { version = "0.0.18", path = "libsodium-sys" }
+exonum_libsodium-sys = { version = "0.0.19", path = "libsodium-sys" }
 serde = { version="1", optional = true }
 
 [dev-dependencies]

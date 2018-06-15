@@ -8,22 +8,39 @@ const MIN_VERSION: &'static str = "1.0.12";
 fn main() {
     use std::env;
 
-    if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-        println!("cargo:rustc-link-search=native={}", lib_dir);
-        let mode = match env::var_os("SODIUM_STATIC") {
-            Some(_) => "static",
-            None => "dylib",
-        };
-        println!("cargo:rustc-link-lib={0}=sodium", mode);
-        println!("cargo:warning=Using unknown libsodium version. This crate is tested against \
-                  {} and may not be fully compatible with other versions.", VERSION);
-    } else if let Ok(lib_details) = pkg_config::Config::new().atleast_version(MIN_VERSION).probe("libsodium") {
-        if lib_details.version != VERSION {
-            println!("cargo:warning=Using libsodium version {}. This crate is tested against {} \
-                      and may not be fully compatible with {}.", lib_details.version, VERSION, 
-                      lib_details.version);
-        }
+    let mut should_build = false;
+
+    let force_build = match env::var("SODIUM_BUILD").ok() {
+        None => false,
+        Some(ref x) if x == "0" => false,
+        Some(_) => true,
+    };
+
+    if force_build {
+        should_build = true;
     } else {
+        if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
+            println!("cargo:rustc-link-search=native={}", lib_dir);
+            let mode = match env::var_os("SODIUM_STATIC") {
+                Some(_) => "static",
+                None => "dylib",
+            };
+            println!("cargo:rustc-link-lib={0}=sodium", mode);
+            println!("cargo:warning=Using unknown libsodium version. This crate is tested against \
+                      {} and may not be fully compatible with other versions.", VERSION);
+        } else if let Ok(lib_details) = pkg_config::Config::new().atleast_version(MIN_VERSION).probe("libsodium") {
+            println!(" === found libsodium: {:#?}", lib_details);
+            if lib_details.version != VERSION {
+                println!("cargo:warning=Using libsodium version {}. This crate is tested against {} \
+                          and may not be fully compatible with {}.", lib_details.version, VERSION,
+                         lib_details.version);
+            }
+        } else {
+            should_build = true;
+        }
+    }
+
+    if should_build {
         use std::env;
         use std::fs::{self, File};
         use std::process::Command;
@@ -101,21 +118,47 @@ fn main() {
         };
 
         // Disable PIE for Ubuntu < 15.04 (see https://github.com/jedisct1/libsodium/issues/292)
-        let disable_pie_arg = match Command::new("lsb_release").arg("-irs").output() {
-            Ok(id_output) => {
-                let stdout = String::from_utf8_lossy(&id_output.stdout);
-                let mut lines = stdout.lines();
-                if lines.next() == Some("Ubuntu") {
-                    let version = lines.next().unwrap();
-                    let v = version.split('.').next().unwrap().parse::<u32>().unwrap();
-                    // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
-                    if v < 15 || version == "16.04" { "--disable-pie" } else { "" }
-                } else {
-                    "--disable-pie"
+        let get_disable_pie_arg = || {
+            const DISABLE_PIE: &str = "--disable-pie";
+
+            let mut lsb_release_cmd = Command::new("lsb_release");
+            let lsb_release_output = lsb_release_cmd
+                .arg("-irs")
+                .output();
+            let lsb_release_output = match lsb_release_output {
+                Ok(output) => output,
+                Err(error) => {
+                    println!("Failed to run 'lsb_release -irs': {}", error);
+                    // Treat "Failed to execute the command" as "any other distribution".
+                    return DISABLE_PIE;
                 }
+            };
+            if !lsb_release_output.status.success() {
+                panic!("\n{:?}\n{}\n{}\n",
+                       lsb_release_cmd,
+                       String::from_utf8_lossy(&lsb_release_output.stdout),
+                       String::from_utf8_lossy(&lsb_release_output.stderr));
             }
-            _ => "",
+            let stdout = String::from_utf8_lossy(&lsb_release_output.stdout);
+
+            let mut lines = stdout.split(|c: char| c.is_whitespace());
+            let distro = lines.next().expect("Missing distributive name");
+            let version = lines.next().expect("Missing distributive version");
+
+            let mut lines = version.split('.');
+            let major: u32 = lines.next().expect("Missing major version")
+                .parse().expect("Major version is not a number");
+
+            match distro {
+                "Ubuntu" if major < 15 => DISABLE_PIE,
+                // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
+                "Ubuntu" if version =="16.04" => DISABLE_PIE,
+                "Ubuntu" => "",
+                // Any other distribution.
+                _ => DISABLE_PIE,
+            }
         };
+        let disable_pie_arg = get_disable_pie_arg();
 
         let mut configure_cmd = Command::new("./configure");
         let configure_output = configure_cmd
@@ -140,6 +183,24 @@ fn main() {
                    help);
         }
 
+        // Run `make clean`
+        let mut clean_cmd = Command::new("make");
+        let clean_output = clean_cmd
+            .current_dir(&source_dir)
+            .arg("clean")
+            .output()
+            .unwrap_or_else(|error| {
+                panic!("Failed to run 'make clean': {}\n{}", error, help);
+            });
+        if !clean_output.status.success() {
+            panic!("\n{:?}\n{}\n{}\n{}\n{}\n",
+                   clean_cmd,
+                   String::from_utf8_lossy(&configure_output.stdout),
+                   String::from_utf8_lossy(&clean_output.stdout),
+                   String::from_utf8_lossy(&clean_output.stderr),
+                   help);
+        }
+
         // Run `make check`, or `make all` if we're cross-compiling
         let j_arg = format!("-j{}", num_cpus::get());
         let make_arg = if cross_compiling { "all" } else { "check" };
@@ -154,9 +215,10 @@ fn main() {
                 panic!("Failed to run 'make {}': {}\n{}", make_arg, error, help);
             });
         if !make_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n{}\n{}",
+            panic!("\n{:?}\n{}\n{}\n{}\n{}\n{}",
                    make_cmd,
                    String::from_utf8_lossy(&configure_output.stdout),
+                   String::from_utf8_lossy(&clean_output.stdout),
                    String::from_utf8_lossy(&make_output.stdout),
                    String::from_utf8_lossy(&make_output.stderr),
                    help);
@@ -172,9 +234,10 @@ fn main() {
                 panic!("Failed to run 'make install': {}", error);
             });
         if !install_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n{}\n{}\n",
+            panic!("\n{:?}\n{}\n{}\n{}\n{}\n{}\n",
                    install_cmd,
                    String::from_utf8_lossy(&configure_output.stdout),
+                   String::from_utf8_lossy(&clean_output.stdout),
                    String::from_utf8_lossy(&make_output.stdout),
                    String::from_utf8_lossy(&install_output.stdout),
                    String::from_utf8_lossy(&install_output.stderr));
