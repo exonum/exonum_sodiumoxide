@@ -153,32 +153,26 @@ pub fn verify_detached(
 }
 
 /// Convert Ed25519 public key to Curve25519 public key.
-pub fn convert_ed_pk_to_curve25519(pk: PublicKey) -> [u8; SCALARMULTBYTES] {
+pub fn convert_ed_pk_to_curve25519(pk: &[u8; SCALARMULTBYTES]) -> [u8; SCALARMULTBYTES] {
     let mut curve_pk = [0; SCALARMULTBYTES];
-    unsafe {
-        ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, &pk.0)
-    }
+    unsafe { ffi::crypto_sign_ed25519_pk_to_curve25519(&mut curve_pk, pk) }
     curve_pk
 }
 
 /// Convert Ed25519 secret key to Curve25519 secret key.
-pub fn convert_ed_sk_to_curve25519(sk: SecretKey) -> [u8; SCALARMULTBYTES] {
-    let mut secret_key = [0; SCALARMULTBYTES];
-    secret_key.clone_from_slice(&sk[..SCALARMULTBYTES]);
+pub fn convert_ed_sk_to_curve25519(sk: &[u8; SCALARMULTBYTES]) -> [u8; SCALARMULTBYTES] {
     let mut curve_sk = [0; SCALARMULTBYTES];
-    unsafe {
-        ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, &secret_key)
-    }
+    unsafe { ffi::crypto_sign_ed25519_sk_to_curve25519(&mut curve_sk, sk) }
     curve_sk
 }
 
 /// Converts Ed25519 keypair to Curve25519 keypair.
-pub fn convert_ed_keypair_to_curve25519(
-    pk: PublicKey,
-    sk: SecretKey
-) -> (PublicKey, SecretKey) {
-    let pk = convert_ed_pk_to_curve25519(pk);
-    let sk = convert_ed_sk_to_curve25519(sk);
+pub fn convert_ed_keypair_to_curve25519(pk: PublicKey, sk: SecretKey) -> (PublicKey, SecretKey) {
+    let pk = convert_ed_pk_to_curve25519(&pk.0);
+
+    let mut secret_key = [0; SCALARMULTBYTES];
+    secret_key.clone_from_slice(&sk[..SCALARMULTBYTES]);
+    let sk = convert_ed_sk_to_curve25519(&secret_key);
 
     let mut secret_key = [0; SECRETKEYBYTES];
     secret_key.clone_from_slice(&[sk, pk].concat());
