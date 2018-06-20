@@ -3,7 +3,7 @@
 pub const crypto_stream_KEYBYTES: usize = crypto_stream_xsalsa20_KEYBYTES;
 pub const crypto_stream_NONCEBYTES: usize =
     crypto_stream_xsalsa20_NONCEBYTES;
-pub const crypto_stream_PRIMITIVE: &'static str = "xsalsa20";
+pub const crypto_stream_PRIMITIVE: &str = "xsalsa20";
 
 
 extern {

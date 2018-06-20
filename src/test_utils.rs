@@ -1,11 +1,11 @@
 #![cfg(all(test, feature = "serde"))]
-extern crate serde_json;
-extern crate rmp_serde;
 extern crate core;
+extern crate rmp_serde;
+extern crate serde_json;
 #[cfg(not(feature = "std"))]
 use prelude::*;
-use serde::{Serialize, Deserialize};
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
 // Encodes then decodes `value` using JSON
 pub fn round_trip<T>(value: T)

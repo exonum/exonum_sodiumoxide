@@ -1,5 +1,5 @@
-extern crate pkg_config;
 extern crate num_cpus;
+extern crate pkg_config;
 
 const VERSION: &'static str = "1.0.16";
 const MIN_VERSION: &'static str = "1.0.12";
@@ -26,14 +26,22 @@ fn main() {
                 None => "dylib",
             };
             println!("cargo:rustc-link-lib={0}=sodium", mode);
-            println!("cargo:warning=Using unknown libsodium version. This crate is tested against \
-                      {} and may not be fully compatible with other versions.", VERSION);
-        } else if let Ok(lib_details) = pkg_config::Config::new().atleast_version(MIN_VERSION).probe("libsodium") {
+            println!(
+                "cargo:warning=Using unknown libsodium version. This crate is tested against \
+                 {} and may not be fully compatible with other versions.",
+                VERSION
+            );
+        } else if let Ok(lib_details) = pkg_config::Config::new()
+            .atleast_version(MIN_VERSION)
+            .probe("libsodium")
+        {
             println!(" === found libsodium: {:#?}", lib_details);
             if lib_details.version != VERSION {
-                println!("cargo:warning=Using libsodium version {}. This crate is tested against {} \
-                          and may not be fully compatible with {}.", lib_details.version, VERSION,
-                         lib_details.version);
+                println!(
+                    "cargo:warning=Using libsodium version {}. This crate is tested against {} \
+                     and may not be fully compatible with {}.",
+                    lib_details.version, VERSION, lib_details.version
+                );
             }
         } else {
             should_build = true;
@@ -41,17 +49,17 @@ fn main() {
     }
 
     if should_build {
+        use flate2::read::GzDecoder;
         use std::env;
         use std::fs::{self, File};
         use std::process::Command;
-        use flate2::read::GzDecoder;
         use tar::Archive;
 
         // Download gz tarball
         let basename = "libsodium-".to_string() + VERSION;
         let gz_filename = basename.clone() + ".tar.gz";
-        let url = "https://github.com/jedisct1/libsodium/releases/download/".to_string() +
-            VERSION + "/" + &gz_filename;
+        let url = "https://github.com/jedisct1/libsodium/releases/download/".to_string() + VERSION
+            + "/" + &gz_filename;
         let mut install_dir = get_install_dir();
         let mut source_dir = env::var("OUT_DIR").unwrap() + "/source";
         // Avoid issues with paths containing spaces by falling back to using /tmp
@@ -60,10 +68,12 @@ fn main() {
             let fallback_path = "/tmp/".to_string() + &basename + "/" + &target;
             install_dir = fallback_path.clone() + "/installed";
             source_dir = fallback_path.clone() + "/source";
-            println!("cargo:warning=The path to the usual build directory contains spaces and hence \
-                      can't be used to build libsodium.  Falling back to use {}.  If running `cargo \
-                      clean`, ensure you also delete this fallback directory",
-                     fallback_path);
+            println!(
+                "cargo:warning=The path to the usual build directory contains spaces and hence \
+                 can't be used to build libsodium.  Falling back to use {}.  If running `cargo \
+                 clean`, ensure you also delete this fallback directory",
+                fallback_path
+            );
         }
         let gz_path = source_dir.clone() + "/" + &gz_filename;
         fs::create_dir_all(&install_dir).unwrap();
@@ -79,15 +89,17 @@ fn main() {
                 panic!("Failed to run curl command: {}", error);
             });
         if !curl_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n",
-                   curl_cmd,
-                   String::from_utf8_lossy(&curl_output.stdout),
-                   String::from_utf8_lossy(&curl_output.stderr));
+            panic!(
+                "\n{:?}\n{}\n{}\n",
+                curl_cmd,
+                String::from_utf8_lossy(&curl_output.stdout),
+                String::from_utf8_lossy(&curl_output.stderr)
+            );
         }
 
         // Unpack the tarball
         let gz_archive = File::open(&gz_path).unwrap();
-        let gz_decoder = GzDecoder::new(gz_archive).unwrap();
+        let gz_decoder = GzDecoder::new(gz_archive);
         let mut archive = Archive::new(gz_decoder);
         archive.unpack(&source_dir).unwrap();
         source_dir.push_str(&format!("/{}", basename));
@@ -98,11 +110,15 @@ fn main() {
         // Run `./configure`
         let build = cc::Build::new();
         let (cc, cflags) = if target.contains("i686") {
-            (format!("{} -m32", build.get_compiler().path().display()),
-             env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")))
+            (
+                format!("{} -m32", build.get_compiler().path().display()),
+                env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")),
+            )
         } else {
-            (format!("{}", build.get_compiler().path().display()),
-             env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")))
+            (
+                format!("{}", build.get_compiler().path().display()),
+                env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")),
+            )
         };
         let prefix_arg = format!("--prefix={}", install_dir);
         let host = env::var("HOST").unwrap();
@@ -122,9 +138,7 @@ fn main() {
             const DISABLE_PIE: &str = "--disable-pie";
 
             let mut lsb_release_cmd = Command::new("lsb_release");
-            let lsb_release_output = lsb_release_cmd
-                .arg("-irs")
-                .output();
+            let lsb_release_output = lsb_release_cmd.arg("-irs").output();
             let lsb_release_output = match lsb_release_output {
                 Ok(output) => output,
                 Err(error) => {
@@ -134,10 +148,12 @@ fn main() {
                 }
             };
             if !lsb_release_output.status.success() {
-                panic!("\n{:?}\n{}\n{}\n",
-                       lsb_release_cmd,
-                       String::from_utf8_lossy(&lsb_release_output.stdout),
-                       String::from_utf8_lossy(&lsb_release_output.stderr));
+                panic!(
+                    "\n{:?}\n{}\n{}\n",
+                    lsb_release_cmd,
+                    String::from_utf8_lossy(&lsb_release_output.stdout),
+                    String::from_utf8_lossy(&lsb_release_output.stderr)
+                );
             }
             let stdout = String::from_utf8_lossy(&lsb_release_output.stdout);
 
@@ -146,13 +162,16 @@ fn main() {
             let version = lines.next().expect("Missing distributive version");
 
             let mut lines = version.split('.');
-            let major: u32 = lines.next().expect("Missing major version")
-                .parse().expect("Major version is not a number");
+            let major: u32 = lines
+                .next()
+                .expect("Missing major version")
+                .parse()
+                .expect("Major version is not a number");
 
             match distro {
                 "Ubuntu" if major < 15 => DISABLE_PIE,
                 // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
-                "Ubuntu" if version =="16.04" => DISABLE_PIE,
+                "Ubuntu" if version == "16.04" => DISABLE_PIE,
                 "Ubuntu" => "",
                 // Any other distribution.
                 _ => DISABLE_PIE,
@@ -174,13 +193,15 @@ fn main() {
                 panic!("Failed to run './configure': {}\n{}", error, help);
             });
         if !configure_output.status.success() {
-            panic!("\n{:?}\nCFLAGS={}\nCC={}\n{}\n{}\n{}\n",
-                   configure_cmd,
-                   cflags,
-                   cc,
-                   String::from_utf8_lossy(&configure_output.stdout),
-                   String::from_utf8_lossy(&configure_output.stderr),
-                   help);
+            panic!(
+                "\n{:?}\nCFLAGS={}\nCC={}\n{}\n{}\n{}\n",
+                configure_cmd,
+                cflags,
+                cc,
+                String::from_utf8_lossy(&configure_output.stdout),
+                String::from_utf8_lossy(&configure_output.stderr),
+                help
+            );
         }
 
         // Run `make clean`
@@ -193,12 +214,14 @@ fn main() {
                 panic!("Failed to run 'make clean': {}\n{}", error, help);
             });
         if !clean_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n{}\n{}\n",
-                   clean_cmd,
-                   String::from_utf8_lossy(&configure_output.stdout),
-                   String::from_utf8_lossy(&clean_output.stdout),
-                   String::from_utf8_lossy(&clean_output.stderr),
-                   help);
+            panic!(
+                "\n{:?}\n{}\n{}\n{}\n{}\n",
+                clean_cmd,
+                String::from_utf8_lossy(&configure_output.stdout),
+                String::from_utf8_lossy(&clean_output.stdout),
+                String::from_utf8_lossy(&clean_output.stderr),
+                help
+            );
         }
 
         // Run `make check`, or `make all` if we're cross-compiling
@@ -215,13 +238,15 @@ fn main() {
                 panic!("Failed to run 'make {}': {}\n{}", make_arg, error, help);
             });
         if !make_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n{}\n{}\n{}",
-                   make_cmd,
-                   String::from_utf8_lossy(&configure_output.stdout),
-                   String::from_utf8_lossy(&clean_output.stdout),
-                   String::from_utf8_lossy(&make_output.stdout),
-                   String::from_utf8_lossy(&make_output.stderr),
-                   help);
+            panic!(
+                "\n{:?}\n{}\n{}\n{}\n{}\n{}",
+                make_cmd,
+                String::from_utf8_lossy(&configure_output.stdout),
+                String::from_utf8_lossy(&clean_output.stdout),
+                String::from_utf8_lossy(&make_output.stdout),
+                String::from_utf8_lossy(&make_output.stderr),
+                help
+            );
         }
 
         // Run `make install`
@@ -234,13 +259,15 @@ fn main() {
                 panic!("Failed to run 'make install': {}", error);
             });
         if !install_output.status.success() {
-            panic!("\n{:?}\n{}\n{}\n{}\n{}\n{}\n",
-                   install_cmd,
-                   String::from_utf8_lossy(&configure_output.stdout),
-                   String::from_utf8_lossy(&clean_output.stdout),
-                   String::from_utf8_lossy(&make_output.stdout),
-                   String::from_utf8_lossy(&install_output.stdout),
-                   String::from_utf8_lossy(&install_output.stderr));
+            panic!(
+                "\n{:?}\n{}\n{}\n{}\n{}\n{}\n",
+                install_cmd,
+                String::from_utf8_lossy(&configure_output.stdout),
+                String::from_utf8_lossy(&clean_output.stdout),
+                String::from_utf8_lossy(&make_output.stdout),
+                String::from_utf8_lossy(&install_output.stdout),
+                String::from_utf8_lossy(&install_output.stderr)
+            );
         }
 
         println!("cargo:rustc-link-lib=static=sodium");
@@ -253,10 +280,10 @@ fn main() {
 extern crate cc;
 #[cfg(all(not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
 extern crate flate2;
-#[cfg(all(not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
-extern crate tar;
 #[cfg(all(target_env = "msvc", not(feature = "use-installed-libsodium")))]
 extern crate libc;
+#[cfg(all(not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
+extern crate tar;
 #[cfg(all(target_env = "msvc", not(feature = "use-installed-libsodium")))]
 extern crate zip;
 
@@ -277,10 +304,12 @@ fn check_powershell_version() {
             panic!("Failed to run powershell command: {}", error);
         });
     if !check_ps_version_output.status.success() {
-        panic!("\n{:?}\n{}\n{}\nYou must have Powershell v4.0 or greater installed.\n\n",
-               check_ps_version_cmd,
-               String::from_utf8_lossy(&check_ps_version_output.stdout),
-               String::from_utf8_lossy(&check_ps_version_output.stderr));
+        panic!(
+            "\n{:?}\n{}\n{}\nYou must have Powershell v4.0 or greater installed.\n\n",
+            check_ps_version_cmd,
+            String::from_utf8_lossy(&check_ps_version_output.stdout),
+            String::from_utf8_lossy(&check_ps_version_output.stderr)
+        );
     }
 }
 
@@ -297,7 +326,7 @@ fn download_compressed_file() -> String {
     let url = "https://download.libsodium.org/libsodium/releases/".to_string() + &zip_filename;
     let zip_path = get_install_dir() + "/" + &zip_filename;
     let command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
-               ((New-Object System.Net.WebClient).DownloadFile(\""
+                   ((New-Object System.Net.WebClient).DownloadFile(\""
         .to_string() + &url + "\", \"" + &zip_path + "\"))";
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
@@ -308,10 +337,12 @@ fn download_compressed_file() -> String {
             panic!("Failed to run powershell download command: {}", error);
         });
     if !download_output.status.success() {
-        panic!("\n{:?}\n{}\n{}\n",
-               download_cmd,
-               String::from_utf8_lossy(&download_output.stdout),
-               String::from_utf8_lossy(&download_output.stderr));
+        panic!(
+            "\n{:?}\n{}\n{}\n",
+            download_cmd,
+            String::from_utf8_lossy(&download_output.stdout),
+            String::from_utf8_lossy(&download_output.stderr)
+        );
     }
     zip_path
 }
@@ -376,18 +407,18 @@ fn main() {
     let _ = fs::remove_file(zip_path);
 
     println!("cargo:rustc-link-lib=static=libsodium");
-    println!("cargo:rustc-link-search=native={}",
-             lib_install_dir.display());
+    println!(
+        "cargo:rustc-link-search=native={}",
+        lib_install_dir.display()
+    );
     println!("cargo:include={}/include", install_dir);
 }
 
-
-
 #[cfg(all(windows, not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
 fn main() {
+    use flate2::read::GzDecoder;
     use std::fs::{self, File};
     use std::path::Path;
-    use flate2::read::GzDecoder;
     use tar::Archive;
 
     check_powershell_version();
@@ -433,7 +464,9 @@ fn main() {
     let _ = fs::remove_file(gz_path);
 
     println!("cargo:rustc-link-lib=static=sodium");
-    println!("cargo:rustc-link-search=native={}",
-             lib_install_dir.display());
+    println!(
+        "cargo:rustc-link-search=native={}",
+        lib_install_dir.display()
+    );
     println!("cargo:include={}/include", install_dir);
 }

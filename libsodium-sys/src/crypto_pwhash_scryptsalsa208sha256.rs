@@ -2,15 +2,15 @@
 
 pub const crypto_pwhash_scryptsalsa208sha256_SALTBYTES: usize = 32;
 pub const crypto_pwhash_scryptsalsa208sha256_STRBYTES: usize = 102;
-pub const crypto_pwhash_scryptsalsa208sha256_STRPREFIX: &'static str = "$7$";
+pub const crypto_pwhash_scryptsalsa208sha256_STRPREFIX: &str = "$7$";
 pub const crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE: usize =
-    524288;
+    524_288;
 pub const crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE: usize =
-    16777216;
+    16_777_216;
 pub const crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE: usize =
-    33554432;
+    33_554_432;
 pub const crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE: usize =
-    1073741824;
+    1_073_741_824;
 
 
 extern {

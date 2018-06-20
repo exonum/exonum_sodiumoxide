@@ -1,7 +1,7 @@
 //! A particular combination of Curve25519, Blake2B, Salsa20 and Poly1305.
+use ffi;
 #[cfg(not(feature = "std"))]
 use prelude::*;
-use ffi;
 
 use libc::c_ulonglong;
 
@@ -48,13 +48,17 @@ pub fn open(
     let ret = unsafe {
         ffi::crypto_box_seal_open(m.as_mut_ptr(), c.as_ptr(), c.len() as c_ulonglong, pk, sk)
     };
-    if ret == 0 { Ok(m) } else { Err(()) }
+    if ret == 0 {
+        Ok(m)
+    } else {
+        Err(())
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use super::super::super::box_::curve25519xsalsa20poly1305 as box_;
+    use super::*;
 
     #[test]
     fn test_seal_open() {

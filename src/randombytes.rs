@@ -1,7 +1,7 @@
 //! Cryptographic random number generation.
+use ffi;
 #[cfg(not(feature = "std"))]
 use prelude::*;
-use ffi;
 use std::iter::repeat;
 
 /// `randombytes()` randomly generates size bytes of data.
