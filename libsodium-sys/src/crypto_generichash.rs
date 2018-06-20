@@ -6,7 +6,7 @@ pub const crypto_generichash_BYTES: usize = crypto_generichash_blake2b_BYTES;
 pub const crypto_generichash_KEYBYTES_MIN: usize = crypto_generichash_blake2b_KEYBYTES_MIN;
 pub const crypto_generichash_KEYBYTES_MAX: usize = crypto_generichash_blake2b_KEYBYTES_MAX;
 pub const crypto_generichash_KEYBYTES: usize = crypto_generichash_blake2b_KEYBYTES;
-pub const crypto_generichash_PRIMITIVE: &'static str = "blake2b";
+pub const crypto_generichash_PRIMITIVE: &str = "blake2b";
 
 #[allow(non_camel_case_types)]
 pub enum crypto_generichash_state { }
@@ -122,7 +122,7 @@ fn test_crypto_generichash_multipart() {
     let m = [0u8; 64];
     let key = [0u8; crypto_generichash_KEYBYTES];
 
-    let mut st = vec![0u8; (unsafe { crypto_generichash_statebytes() })];
+    let mut st = vec![0u8; unsafe { crypto_generichash_statebytes() }];
     let pst = unsafe { mem::transmute::<*mut u8, *mut crypto_generichash_state>(st.as_mut_ptr()) };
 
     assert_eq!(unsafe {

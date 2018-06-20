@@ -1,7 +1,7 @@
 pub const crypto_secretbox_KEYBYTES: usize = 32;
 pub const crypto_secretbox_NONCEBYTES: usize = 24;
 pub const crypto_secretbox_MACBYTES: usize = 16;
-pub const crypto_secretbox_PRIMITIVE: &'static str = "xsalsa20poly1305";
+pub const crypto_secretbox_PRIMITIVE: &str = "xsalsa20poly1305";
 
 
 extern {

@@ -147,8 +147,8 @@ mod test {
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use randombytes::randombytes;
     use super::*;
+    use randombytes::randombytes;
 
     const BENCH_SIZES: [usize; 14] = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
 
@@ -156,8 +156,10 @@ mod bench {
     fn bench_shorthash(b: &mut test::Bencher) {
         let k = gen_key();
         let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
-        b.iter(|| for m in ms.iter() {
-            shorthash(m, &k);
+        b.iter(|| {
+            for m in ms.iter() {
+                shorthash(m, &k);
+            }
         });
     }
 }

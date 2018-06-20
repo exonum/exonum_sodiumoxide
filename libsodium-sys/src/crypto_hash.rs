@@ -1,7 +1,7 @@
 // crypto_hash.h
 
 pub const crypto_hash_BYTES: usize = crypto_hash_sha512_BYTES;
-pub const crypto_hash_PRIMITIVE: &'static str = "sha512";
+pub const crypto_hash_PRIMITIVE: &str = "sha512";
 
 
 extern {

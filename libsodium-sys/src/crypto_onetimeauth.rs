@@ -4,7 +4,7 @@ pub const crypto_onetimeauth_BYTES: usize =
     crypto_onetimeauth_poly1305_BYTES;
 pub const crypto_onetimeauth_KEYBYTES: usize =
     crypto_onetimeauth_poly1305_KEYBYTES;
-pub const crypto_onetimeauth_PRIMITIVE: &'static str =  "poly1305";
+pub const crypto_onetimeauth_PRIMITIVE: &str =  "poly1305";
 
 
 extern {

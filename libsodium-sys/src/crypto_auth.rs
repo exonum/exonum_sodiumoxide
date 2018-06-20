@@ -2,7 +2,7 @@
 
 pub const crypto_auth_BYTES: usize = crypto_auth_hmacsha512256_BYTES;
 pub const crypto_auth_KEYBYTES: usize = crypto_auth_hmacsha512256_KEYBYTES;
-pub const crypto_auth_PRIMITIVE: &'static str = "hmacsha512256";
+pub const crypto_auth_PRIMITIVE: &str = "hmacsha512256";
 
 
 extern {

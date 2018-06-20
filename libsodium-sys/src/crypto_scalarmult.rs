@@ -2,7 +2,7 @@
 
 pub const crypto_scalarmult_BYTES: usize = crypto_scalarmult_curve25519_BYTES;
 pub const crypto_scalarmult_SCALARBYTES: usize = crypto_scalarmult_curve25519_SCALARBYTES;
-pub const crypto_scalarmult_PRIMITIVE: &'static str = "curve25519";
+pub const crypto_scalarmult_PRIMITIVE: &str = "curve25519";
 
 extern {
     pub fn crypto_scalarmult_bytes() -> size_t;

@@ -2,13 +2,13 @@
 //! [Ed25519](http://ed25519.cr.yp.to/). This function is conjectured to meet the
 //! standard notion of unforgeability for a public-key signature scheme under
 //! chosen-message attacks.
-#[cfg(not(feature = "std"))]
-use prelude::*;
 use ffi;
 use libc::c_ulonglong;
+#[cfg(not(feature = "std"))]
+use prelude::*;
+use std::fmt;
 use std::iter::repeat;
 use std::mem;
-use std::fmt;
 
 /// Number of bytes in a `Seed`.
 pub const SEEDBYTES: usize = ffi::crypto_sign_ed25519_SEEDBYTES;
@@ -271,7 +271,6 @@ mod test {
         }
         let sig = creation_state.finalize(&sk);
         assert!(validator_state.verify(&sig, &pk));
-
     }
 
     #[test]
@@ -442,7 +441,7 @@ mod test {
 
     #[test]
     fn test_crypto_sign_ed25519_to_curve25519() {
-        use crypto::scalarmult::curve25519::{Scalar, GroupElement, scalarmult_base};
+        use crypto::scalarmult::curve25519::{scalarmult_base, GroupElement, Scalar};
 
         let (pk, sk) = gen_keypair();
         let (PublicKey(ref pk), SecretKey(ref sk)) = convert_ed_keypair_to_curve25519(pk, sk);
@@ -458,8 +457,8 @@ mod test {
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use randombytes::randombytes;
     use super::*;
+    use randombytes::randombytes;
 
     const BENCH_SIZES: [usize; 14] = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
 
@@ -467,8 +466,10 @@ mod bench {
     fn bench_sign(b: &mut test::Bencher) {
         let (_, sk) = gen_keypair();
         let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
-        b.iter(|| for m in ms.iter() {
-            sign(m, &sk);
+        b.iter(|| {
+            for m in ms.iter() {
+                sign(m, &sk);
+            }
         });
     }
 
@@ -482,8 +483,10 @@ mod bench {
                 sign(&m, &sk)
             })
             .collect();
-        b.iter(|| for sm in sms.iter() {
-            verify(sm, &pk);
+        b.iter(|| {
+            for sm in sms.iter() {
+                verify(sm, &pk);
+            }
         });
     }
 }
