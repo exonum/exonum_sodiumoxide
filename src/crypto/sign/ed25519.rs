@@ -180,6 +180,24 @@ pub fn convert_ed_keypair_to_curve25519(pk: PublicKey, sk: SecretKey) -> (Public
     (PublicKey(pk), SecretKey(secret_key))
 }
 
+/// Converts `SecretKey` to `Seed`.
+pub fn convert_sk_to_seed(sk: SecretKey) -> Seed {
+    let mut seed = [0; SEEDBYTES];
+    unsafe {
+        ffi::crypto_sign_ed25519_sk_to_seed(&mut seed, &sk.0);
+    }
+    Seed(seed)
+}
+
+/// Converts `SecretKey` to `PublicKey`.
+pub fn convert_sk_to_pk(sk: SecretKey) -> PublicKey {
+    let mut pk = [0; PUBLICKEYBYTES];
+    unsafe {
+        ffi::crypto_sign_ed25519_sk_to_pk(&mut pk, &sk.0);
+    }
+    PublicKey(pk)
+}
+
 /// State for multi-part (streaming) computation of signature.
 #[derive(Clone)]
 pub struct State(ffi::crypto_sign_ed25519ph_state);
@@ -353,7 +371,7 @@ mod test {
             let mut sm = sign(&m, &sk);
             for j in 0..sm.len() {
                 sm[j] ^= 0x20;
-                assert!(Err(()) == verify(&mut sm, &pk));
+                assert_eq!(Err(()), verify(&mut sm, &pk));
                 sm[j] ^= 0x20;
             }
         }
@@ -450,6 +468,21 @@ mod test {
         let GroupElement(public_key) = scalarmult_base(&secret_key);
 
         assert_eq!(pk, &public_key);
+    }
+
+    #[test]
+    fn test_convert_sk_to_seed() {
+        let (_, sk) = gen_keypair();
+        let seed = convert_sk_to_seed(sk.clone());
+        let (_, sk_from_seed) = keypair_from_seed(&seed);
+        assert_eq!(sk, sk_from_seed);
+    }
+
+    #[test]
+    fn test_convert_sk_to_pk() {
+        let (pk, sk) = gen_keypair();
+        let pk_from_sk = convert_sk_to_pk(sk.clone());
+        assert_eq!(pk, pk_from_sk);
     }
 }
 

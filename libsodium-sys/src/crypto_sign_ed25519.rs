@@ -65,30 +65,60 @@ extern {
 
     pub fn crypto_sign_ed25519_sk_to_curve25519(curve25519_sk: *mut [u8; crypto_scalarmult_curve25519_BYTES],
         ed25519_sk: *const [u8; crypto_scalarmult_curve25519_BYTES]);
+
+    pub fn crypto_sign_ed25519_sk_to_seed(seed: *mut [u8; crypto_sign_ed25519_SEEDBYTES],
+                                          sk: *const [u8; crypto_sign_ed25519_SECRETKEYBYTES]) -> c_int;
+
+    pub fn crypto_sign_ed25519_sk_to_pk(pk: *mut [u8; crypto_sign_ed25519_PUBLICKEYBYTES],
+                                        sk: *const [u8; crypto_sign_ed25519_SECRETKEYBYTES]) -> c_int;
 }
 
 
 #[test]
 fn test_crypto_sign_ed25519_bytes() {
-    assert!(unsafe {
+    assert_eq!(unsafe {
         crypto_sign_ed25519_bytes() as usize
-    } == crypto_sign_ed25519_BYTES)
+    }, crypto_sign_ed25519_BYTES)
 }
 #[test]
 fn test_crypto_sign_ed25519_seedbytes() {
-    assert!(unsafe {
+    assert_eq!(unsafe {
         crypto_sign_ed25519_seedbytes() as usize
-    } == crypto_sign_ed25519_SEEDBYTES)
+    }, crypto_sign_ed25519_SEEDBYTES)
 }
 #[test]
 fn test_crypto_sign_ed25519_publickeybytes() {
-    assert!(unsafe {
+    assert_eq!(unsafe {
         crypto_sign_ed25519_publickeybytes() as usize
-    } == crypto_sign_ed25519_PUBLICKEYBYTES)
+    }, crypto_sign_ed25519_PUBLICKEYBYTES)
 }
 #[test]
 fn test_crypto_sign_ed25519_secretkeybytes() {
-    assert!(unsafe {
+    assert_eq!(unsafe {
         crypto_sign_ed25519_secretkeybytes() as usize
-    } == crypto_sign_ed25519_SECRETKEYBYTES)
+    }, crypto_sign_ed25519_SECRETKEYBYTES)
+}
+
+#[test]
+fn test_crypto_sign_ed25519_sk_to_seed() {
+    let mut pk = [0; crypto_sign_ed25519_PUBLICKEYBYTES];
+    let mut sk = [0; crypto_sign_ed25519_SECRETKEYBYTES];
+    let mut seed = [0; crypto_sign_ed25519_SEEDBYTES];
+    unsafe {
+        assert_eq!(crypto_sign_ed25519_keypair(&mut pk, &mut sk), 0);
+        assert_eq!(crypto_sign_ed25519_sk_to_seed(&mut seed, &sk), 0);
+    }
+    assert_eq!(seed, sk[..crypto_sign_ed25519_PUBLICKEYBYTES]);
+}
+
+#[test]
+fn test_crypto_sign_ed25519_sk_to_pk() {
+    let mut pk = [0; crypto_sign_ed25519_PUBLICKEYBYTES];
+    let mut sk = [0; crypto_sign_ed25519_SECRETKEYBYTES];
+    let mut pk_from_sk = [0; crypto_sign_ed25519_PUBLICKEYBYTES];
+    unsafe {
+        assert_eq!(crypto_sign_ed25519_keypair(&mut pk, &mut sk), 0);
+        assert_eq!(crypto_sign_ed25519_sk_to_pk(&mut pk_from_sk, &sk), 0);
+    }
+    assert_eq!(pk, pk_from_sk);
 }
