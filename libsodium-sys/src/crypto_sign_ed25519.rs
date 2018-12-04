@@ -108,7 +108,7 @@ fn test_crypto_sign_ed25519_sk_to_seed() {
         assert_eq!(crypto_sign_ed25519_keypair(&mut pk, &mut sk), 0);
         assert_eq!(crypto_sign_ed25519_sk_to_seed(&mut seed, &sk), 0);
     }
-    assert_eq!(seed, sk[..crypto_sign_ed25519_PUBLICKEYBYTES]);
+    assert_eq!(seed, sk[..crypto_sign_ed25519_SEEDBYTES]);
 }
 
 #[test]
