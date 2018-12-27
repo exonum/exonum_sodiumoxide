@@ -108,18 +108,32 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
+        let target_parts: Vec<&str> = target.split("-").collect();
+        let mut target_arch = target_parts[0];
+        if target_arch == "aarch64" {
+            target_arch = "arm64";
+        }
+        let target_sys = target_parts[2];
+
+        let mut path = env::var("PATH").expect("Error retrieving $PATH");
+        let mut cflags = env::var("CFLAGS").unwrap_or(format!("-march={} -O3", target_arch));
+
+        if target_sys == "ios" {
+            let xcode_dir_output = Command::new("xcode-select").arg("-p").output()
+                .expect("failed to execute xcode-select");
+            let xcode_dir_stdout = String::from_utf8_lossy(&xcode_dir_output.stdout);
+            let xcode_dir  = xcode_dir_stdout.trim();
+
+            let platform = if target_arch == "arm64" { "iPhoneOS" } else { "iPhoneSimulator" };
+            let base_dir = format!("{}/Platforms/{}.platform/Developer", xcode_dir, platform);
+            let sdk = format!("{}/SDKs/{}.sdk", base_dir, platform);
+
+            path = format!("{}/usr/bin:{}/usr/sbin:{}", base_dir, base_dir, path);
+            cflags = env::var("CFLAGS").unwrap_or(format!("-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0", target_arch, sdk));
+        }
+
         let build = cc::Build::new();
-        let (cc, cflags) = if target.contains("i686") {
-            (
-                format!("{} -m32", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")),
-            )
-        } else {
-            (
-                format!("{}", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")),
-            )
-        };
+        let cc = format!("{} -m32", build.get_compiler().path().display());
         let prefix_arg = format!("--prefix={}", install_dir);
         let host = env::var("HOST").unwrap();
         let host_arg = format!("--host={}", target);
@@ -182,6 +196,7 @@ fn main() {
         let mut configure_cmd = Command::new("./configure");
         let configure_output = configure_cmd
             .current_dir(&source_dir)
+            .env("PATH", &path)
             .env("CC", &cc)
             .env("CFLAGS", &cflags)
             .arg(&prefix_arg)
