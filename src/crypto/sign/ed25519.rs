@@ -167,6 +167,7 @@ pub fn convert_ed_sk_to_curve25519(sk: &[u8; SCALARMULTBYTES]) -> [u8; SCALARMUL
 }
 
 /// Converts Ed25519 keypair to Curve25519 keypair.
+#[allow(clippy::needless_pass_by_value)]
 pub fn convert_ed_keypair_to_curve25519(pk: PublicKey, sk: SecretKey) -> (PublicKey, SecretKey) {
     let pk = convert_ed_pk_to_curve25519(&pk.0);
 
@@ -181,7 +182,7 @@ pub fn convert_ed_keypair_to_curve25519(pk: PublicKey, sk: SecretKey) -> (Public
 }
 
 /// Converts `SecretKey` to `Seed`.
-pub fn convert_sk_to_seed(sk: SecretKey) -> Seed {
+pub fn convert_sk_to_seed(sk: &SecretKey) -> Seed {
     let mut seed = [0; SEEDBYTES];
     unsafe {
         ffi::crypto_sign_ed25519_sk_to_seed(&mut seed, &sk.0);
@@ -190,7 +191,7 @@ pub fn convert_sk_to_seed(sk: SecretKey) -> Seed {
 }
 
 /// Converts `SecretKey` to `PublicKey`.
-pub fn convert_sk_to_pk(sk: SecretKey) -> PublicKey {
+pub fn convert_sk_to_pk(sk: &SecretKey) -> PublicKey {
     let mut pk = [0; PUBLICKEYBYTES];
     unsafe {
         ffi::crypto_sign_ed25519_sk_to_pk(&mut pk, &sk.0);

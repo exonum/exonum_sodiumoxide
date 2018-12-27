@@ -1,27 +1,63 @@
 language: rust
 
+addons:
+  apt:
+    packages:
+      - binutils-dev
+      - build-essential
+      - cmake
+      - g++
+      - gcc
+      - libcurl4-openssl-dev
+      - libdw-dev
+      - libelf-dev
+      - libiberty-dev
+      - zlib1g-dev
 rust:
   - stable
 
-cache: cargo
-sudo: required
 dist: trusty
+sudo: required
 
-before_install:
-- cargo-audit -V || cargo install cargo-audit --force
-- sudo add-apt-repository -y ppa:elt/libsodium
-- sudo apt-get -qq update
-- cargo install --list
+cache:
+  directories:
+    - $HOME/.cargo
+    - $HOME/.local
+    - $TRAVIS_BUILD_DIR/target
 
-install:
-- sudo apt-get -qq --yes install gcc g++ make libssl-dev libsodium-dev
-
-script:
-- cargo build
-- cargo audit
-- cargo test
-
-notifications:
-  slack:
-    rooms:
-      secure: EyQW22NjyDYiuWelsszt3cYgcZXHbEWiJMzYb7X5ovkAeX1Bm/FMGwaX8d9OGoebfY/NpAho8s1cX05vTxWT4N6sKsLACTcQI5te0fgiy8KVaL8ep1XpDi3JQQEDf/cVZkUlfDHE//gfDmY4boOQlejWXjmeLiYpV6rFW2yk+PDFDTS7J/GCTFxcdpqy+smdccUoJaJNpKH65fXaLSSPdZoWK2cnHb9RYEPIuwa9mCSlV+nfL0TSUUrDvcQu/dOkU92KFVHFSgzXIUm3u/UlN8MZPnrZ4DJ5uXqMzmCj2fSaP6625CvzNQBs/p93pIHC/XAL2MAUnZsiQtBQ7/cLEdQpYK8vXWilVuyZ6GFJ6KTQ7OXLD5Ka+KtkdcvGFMOgu0KfMVpaCvzT8yCOxv9G0Ld9XxZBQM5Ly+gpQPqEiov44zimHUfoaH6OlJI9dNiTnZCAeS7W9rpmuruG3ld23bru4YCgNXK3IfQ98tZESO4YCke36adnKuu1qiLWUOcS7svRojFYBiNJjCh54YZiM95aNMyJ1XYTo/SLWWIZ4RflfSWcc0XR2Qv9iNJjT5uACIeUtmjii492PLSz3NtLq/xoP6VCAbSb7yVbyC4BZuGE2scaduSce+1st8g5rDWFrVmNXBCVdz/au20+OOQR2JAiw1UPSNhwl/JS9GR/4Ck=
+jobs:
+  include:
+    # Build and tests without pre-compiled libsodium library on Linux OS.
+    - name: linux
+      os: linux
+      script:
+        - cargo test
+    # Build and tests with pre-compiled `libsodium` library on Linux OS.
+    - name: linux precompile
+      os: linux
+      install:
+        - sudo add-apt-repository -y ppa:elt/libsodium
+        - sudo apt-get -qq update
+        - sudo apt-get -qq --yes pkg-config libsodium-dev
+      script:
+        - cargo test
+    # Build and tests without pre-compiled libsodium library on MacOS.
+    - name: macos
+        os: osx
+        script:
+          - cargo test
+    # Build and tests without pre-compiled libsodium library on Windows OS.
+    - name: windows
+      os: windows
+      script:
+        - cargo test --tests
+    # Run clippy linter with pre-compiled libsodium library on Linux OS.
+    - name: clippy
+      os: linux
+      install:
+        - sudo add-apt-repository -y ppa:elt/libsodium
+        - sudo apt-get -qq update
+        - sudo apt-get -qq --yes pkg-config libsodium-dev
+        - rustup component add clippy-preview
+      script:
+        - cargo clippy --all -- -D warnings
