@@ -43,9 +43,9 @@ jobs:
         - cargo test
     # Build and tests without pre-compiled libsodium library on MacOS.
     - name: macos
-        os: osx
-        script:
-          - cargo test
+      os: osx
+      script:
+        - cargo test
     # Build and tests without pre-compiled libsodium library on Windows OS.
     - name: windows
       os: windows
