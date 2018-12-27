@@ -116,7 +116,18 @@ fn main() {
         let target_sys = target_parts[2];
 
         let mut path = env::var("PATH").expect("Error retrieving $PATH");
-        let mut cflags = env::var("CFLAGS").unwrap_or(format!("-march={} -O3", target_arch));
+        let build = cc::Build::new();
+        let (cc, mut cflags) = if target.contains("i686") {
+            (
+                format!("{} -m32", build.get_compiler().path().display()),
+                env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")),
+            )
+        } else {
+            (
+                format!("{}", build.get_compiler().path().display()),
+                env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")),
+            )
+        };
 
         if target_sys == "ios" {
             let xcode_dir_output = Command::new("xcode-select").arg("-p").output()
@@ -132,8 +143,6 @@ fn main() {
             cflags = env::var("CFLAGS").unwrap_or(format!("-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0", target_arch, sdk));
         }
 
-        let build = cc::Build::new();
-        let cc = format!("{} -m32", build.get_compiler().path().display());
         let prefix_arg = format!("--prefix={}", install_dir);
         let host = env::var("HOST").unwrap();
         let host_arg = format!("--host={}", target);
