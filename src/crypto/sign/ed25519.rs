@@ -474,7 +474,7 @@ mod test {
     #[test]
     fn test_convert_sk_to_seed() {
         let (_, sk) = gen_keypair();
-        let seed = convert_sk_to_seed(sk.clone());
+        let seed = convert_sk_to_seed(&sk);
         let (_, sk_from_seed) = keypair_from_seed(&seed);
         assert_eq!(sk, sk_from_seed);
     }
@@ -482,7 +482,7 @@ mod test {
     #[test]
     fn test_convert_sk_to_pk() {
         let (pk, sk) = gen_keypair();
-        let pk_from_sk = convert_sk_to_pk(sk.clone());
+        let pk_from_sk = convert_sk_to_pk(&sk);
         assert_eq!(pk, pk_from_sk);
     }
 }
