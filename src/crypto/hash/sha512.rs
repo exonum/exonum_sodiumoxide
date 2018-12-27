@@ -5,8 +5,10 @@
 //! However, for the moment, there do not appear to be alternatives that
 //! inspire satisfactory levels of confidence. One can hope that NIST's
 //! SHA-3 competition will improve the situation.
-use ffi::{crypto_hash_sha512, crypto_hash_sha512_BYTES, crypto_hash_sha512_final,
-          crypto_hash_sha512_init, crypto_hash_sha512_state, crypto_hash_sha512_update};
+use ffi::{
+    crypto_hash_sha512, crypto_hash_sha512_BYTES, crypto_hash_sha512_final,
+    crypto_hash_sha512_init, crypto_hash_sha512_state, crypto_hash_sha512_update,
+};
 
 hash_module!(
     crypto_hash_sha512,
@@ -121,8 +123,8 @@ mod test {
 
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA512ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA512LongMsg.rsp");
-        let real_short = "13e65c6c9e0515d88aaa40c341b5d748b0a3376e0d3748049f1103ae7ce82ca48a85ae68cf34e8389e022a4c431b5654778787343f485c1aef9f48a1960ae389".from_hex().unwrap(); // short file
-        let real_long  = "a86c0eb9e404ffbafa2e3eab986ce0a6bcebe2087ae9b4caa003a77f0abe37145ecdf005b7354e6ded925ffc1fa47275c6e841d388d2d0c7fe215b7360c3df88".from_hex().unwrap(); // long file
+        let real_short = "c0fa02fa36680458c0143a1b837eb87eefc7bbec299f1b1ec2bc304ebf516bacc5020bc04a94fe00fb3dcec64b938bf347ed45431dec3dc2a2e8bb4d89e785cf".from_hex().unwrap(); // short file
+        let real_long  = "1e77643d79d0836b97fae313393f01cdc639ab20c97dc56f60a303e25a73d8afd4ad4e08fb1d45b0b2ce20ce64d63a82e1f750ba797435120c02f94d0404c015".from_hex().unwrap(); // long file
         assert_eq!(&hash_short[..], &real_short[..]);
         assert_eq!(&hash_long[..], &real_long[..]);
     }

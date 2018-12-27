@@ -5,8 +5,10 @@
 //! However, for the moment, there do not appear to be alternatives that
 //! inspire satisfactory levels of confidence. One can hope that NIST's
 //! SHA-3 competition will improve the situation.
-use ffi::{crypto_hash_sha256, crypto_hash_sha256_BYTES, crypto_hash_sha256_final,
-          crypto_hash_sha256_init, crypto_hash_sha256_state, crypto_hash_sha256_update};
+use ffi::{
+    crypto_hash_sha256, crypto_hash_sha256_BYTES, crypto_hash_sha256_final,
+    crypto_hash_sha256_init, crypto_hash_sha256_state, crypto_hash_sha256_update,
+};
 
 hash_module!(
     crypto_hash_sha256,
@@ -139,10 +141,10 @@ mod test {
 
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA256ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA256LongMsg.rsp");
-        let real_short = "aaf8115ef18263c52a7d2478d72b37dea30b25a1f7d0497136fbf7950715c587"
+        let real_short = "49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8"
             .from_hex()
             .unwrap(); // short file
-        let real_long = "b1f63358201511b72aa8e21234df37cf3287e95337dc2adb3d219968bedfa6a2"
+        let real_long = "12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b"
             .from_hex()
             .unwrap(); // long file
 
