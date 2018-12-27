@@ -141,12 +141,26 @@ mod test {
 
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA256ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA256LongMsg.rsp");
-        let real_short = "49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8"
-            .from_hex()
-            .unwrap(); // short file
-        let real_long = "12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b"
-            .from_hex()
-            .unwrap(); // long file
+
+        let (real_short, real_long) = if cfg!(unix) {
+            (
+                "49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8"
+                    .from_hex()
+                    .unwrap(),
+                "12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b"
+                    .from_hex()
+                    .unwrap(),
+            )
+        } else {
+            (
+                "2fe1398dfaa6635656d5b4e3956eb87258f6ab2c19050b8b8f2fd5f715160025"
+                    .from_hex()
+                    .unwrap(),
+                "23297bf12788e13732763abcf39874f24332024ee31038e0858dbe9224722314"
+                    .from_hex()
+                    .unwrap(),
+            )
+        };
 
         assert_eq!(&hash_short[..], &real_short[..]);
         assert_eq!(&hash_long[..], &real_long[..]);

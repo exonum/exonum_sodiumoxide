@@ -123,8 +123,19 @@ mod test {
 
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA512ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA512LongMsg.rsp");
-        let real_short = "c0fa02fa36680458c0143a1b837eb87eefc7bbec299f1b1ec2bc304ebf516bacc5020bc04a94fe00fb3dcec64b938bf347ed45431dec3dc2a2e8bb4d89e785cf".from_hex().unwrap(); // short file
-        let real_long  = "1e77643d79d0836b97fae313393f01cdc639ab20c97dc56f60a303e25a73d8afd4ad4e08fb1d45b0b2ce20ce64d63a82e1f750ba797435120c02f94d0404c015".from_hex().unwrap(); // long file
+
+        let (real_short, real_long) = if cfg!(unix) {
+            (
+                "c0fa02fa36680458c0143a1b837eb87eefc7bbec299f1b1ec2bc304ebf516bacc5020bc04a94fe00fb3dcec64b938bf347ed45431dec3dc2a2e8bb4d89e785cf".from_hex().unwrap(),
+                "1e77643d79d0836b97fae313393f01cdc639ab20c97dc56f60a303e25a73d8afd4ad4e08fb1d45b0b2ce20ce64d63a82e1f750ba797435120c02f94d0404c015".from_hex().unwrap()
+            )
+        } else {
+            (
+                "ef27a9fcbeb037d00bed853f496588d456d8caee85669f3a4e77dd9fd406da0742a04fdcaeca0cc64d5f77877b51f363e0007038928c4654b4410aeb71d246cf".from_hex().unwrap(),
+                "2f91df6c65031255d529593a04b9166bb6842bb574eb18bad3d3be24fc7d1e9f6ffe0433ce029f91d81c91a3f741422373101408d723602ed7aa0862ac017323".from_hex().unwrap()
+            )
+        };
+
         assert_eq!(&hash_short[..], &real_short[..]);
         assert_eq!(&hash_long[..], &real_long[..]);
     }
