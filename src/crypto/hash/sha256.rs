@@ -5,8 +5,10 @@
 //! However, for the moment, there do not appear to be alternatives that
 //! inspire satisfactory levels of confidence. One can hope that NIST's
 //! SHA-3 competition will improve the situation.
-use ffi::{crypto_hash_sha256, crypto_hash_sha256_BYTES, crypto_hash_sha256_final,
-          crypto_hash_sha256_init, crypto_hash_sha256_state, crypto_hash_sha256_update};
+use ffi::{
+    crypto_hash_sha256, crypto_hash_sha256_BYTES, crypto_hash_sha256_final,
+    crypto_hash_sha256_init, crypto_hash_sha256_state, crypto_hash_sha256_update,
+};
 
 hash_module!(
     crypto_hash_sha256,
@@ -139,12 +141,26 @@ mod test {
 
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA256ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA256LongMsg.rsp");
-        let real_short = "aaf8115ef18263c52a7d2478d72b37dea30b25a1f7d0497136fbf7950715c587"
-            .from_hex()
-            .unwrap(); // short file
-        let real_long = "b1f63358201511b72aa8e21234df37cf3287e95337dc2adb3d219968bedfa6a2"
-            .from_hex()
-            .unwrap(); // long file
+
+        let (real_short, real_long) = if cfg!(unix) {
+            (
+                "49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8"
+                    .from_hex()
+                    .unwrap(),
+                "12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b"
+                    .from_hex()
+                    .unwrap(),
+            )
+        } else {
+            (
+                "2fe1398dfaa6635656d5b4e3956eb87258f6ab2c19050b8b8f2fd5f715160025"
+                    .from_hex()
+                    .unwrap(),
+                "23297bf12788e13732763abcf39874f24332024ee31038e0858dbe9224722314"
+                    .from_hex()
+                    .unwrap(),
+            )
+        };
 
         assert_eq!(&hash_short[..], &real_short[..]);
         assert_eq!(&hash_long[..], &real_long[..]);
