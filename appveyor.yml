@@ -1,4 +1,4 @@
-os: Visual Studio 2015
+os: Visual Studio 2017
 
 cache:
   - '%USERPROFILE%\.cargo'
@@ -14,6 +14,7 @@ environment:
       target: x86_64-pc-windows-msvc
 
 matrix:
+  fast_finish: true
   allow_failures:
     - channel: nightly
 
@@ -24,7 +25,9 @@ install:
   - rustc -vV
   - cargo -vV
 
-build: false
+build:
+  parallel: true
+  verbosity: detailed
 
 test_script:
   - cargo build --verbose
