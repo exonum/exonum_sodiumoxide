@@ -25,9 +25,7 @@ install:
   - rustc -vV
   - cargo -vV
 
-build:
-  parallel: true
-  verbosity: detailed
+build: off
 
 test_script:
   - cargo build --verbose
