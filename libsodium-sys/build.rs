@@ -1,7 +1,7 @@
 extern crate num_cpus;
 extern crate pkg_config;
 
-const VERSION: &'static str = "1.0.16";
+const VERSION: &'static str = "1.0.17";
 const MIN_VERSION: &'static str = "1.0.12";
 
 #[cfg(not(windows))]
@@ -455,7 +455,7 @@ fn main() {
 
     // Unpack the tarball
     let gz_archive = File::open(&gz_path).unwrap();
-    let gz_decoder = GzDecoder::new(gz_archive).unwrap();
+    let gz_decoder = GzDecoder::new(gz_archive);
     let mut archive = Archive::new(gz_decoder);
 
     // Extract just the appropriate version of libsodium.a and headers to the install path

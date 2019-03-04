@@ -1,8 +1,10 @@
 //! `crypto_stream_salsa20` (Salsa20/20), a particular cipher specified in
 //! [Cryptography in NaCl](http://nacl.cr.yp.to/valid.html), Section 7.  This
 //! cipher is conjectured to meet the standard notion of unpredictability.
-use ffi::{crypto_stream_salsa20, crypto_stream_salsa20_KEYBYTES, crypto_stream_salsa20_NONCEBYTES,
-          crypto_stream_salsa20_xor};
+use ffi::{
+    crypto_stream_salsa20, crypto_stream_salsa20_KEYBYTES, crypto_stream_salsa20_NONCEBYTES,
+    crypto_stream_salsa20_xor,
+};
 
 stream_module!(
     crypto_stream_salsa20,
@@ -18,7 +20,7 @@ mod test {
     #[test]
     fn test_vector_1() {
         // corresponding to tests/stream2.c and tests/stream6.cpp from NaCl
-        use crypto::hash::sha256::{hash, Digest};
+        use crate::crypto::hash::sha256::{hash, Digest};
         let secondkey = Key([
             0xdc, 0x90, 0x8d, 0xda, 0x0b, 0x93, 0x44, 0xa9, 0x53, 0x62, 0x9b, 0x73, 0x38, 0x20,
             0x77, 0x88, 0x80, 0xf3, 0xce, 0xb4, 0x21, 0xbb, 0x61, 0xb9, 0x1c, 0xbd, 0x4c, 0x3e,

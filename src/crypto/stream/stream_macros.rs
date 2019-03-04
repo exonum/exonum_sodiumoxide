@@ -6,7 +6,7 @@ macro_rules! stream_module (($stream_name:ident,
 #[cfg(not(feature = "std"))] use prelude::*;
 use libc::c_ulonglong;
 use std::iter::repeat;
-use randombytes::randombytes_into;
+use crate::randombytes::randombytes_into;
 
 /// Number of bytes in a `Key`.
 pub const KEYBYTES: usize = $keybytes;
@@ -107,11 +107,11 @@ pub fn stream_xor_inplace(m: &mut [u8],
 
 #[cfg(test)]
 mod test_m {
+    use crate::randombytes::randombytes;
     use super::*;
 
     #[test]
     fn test_encrypt_decrypt() {
-        use randombytes::randombytes;
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
@@ -124,7 +124,6 @@ mod test_m {
 
     #[test]
     fn test_stream_xor() {
-        use randombytes::randombytes;
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
@@ -141,7 +140,6 @@ mod test_m {
 
     #[test]
     fn test_stream_xor_inplace() {
-        use randombytes::randombytes;
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
@@ -159,7 +157,7 @@ mod test_m {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialisation() {
-        use test_utils::round_trip;
+        use crate::test_utils::round_trip;
         for _ in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();

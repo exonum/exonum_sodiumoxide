@@ -5,7 +5,7 @@ macro_rules! auth_module (($auth_name:ident,
                            $tagbytes:expr) => (
 
 use libc::c_ulonglong;
-use randombytes::randombytes_into;
+use crate::randombytes::randombytes_into;
 
 /// Number of bytes in a `Key`.
 pub const KEYBYTES: usize = $keybytes;
@@ -68,11 +68,11 @@ pub fn verify(&Tag(ref tag): &Tag, m: &[u8],
 
 #[cfg(test)]
 mod test_m {
+    use crate::randombytes::randombytes;
     use super::*;
 
     #[test]
     fn test_auth_verify() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -83,7 +83,6 @@ mod test_m {
 
     #[test]
     fn test_auth_verify_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let k = gen_key();
             let mut m = randombytes(i);
@@ -104,8 +103,7 @@ mod test_m {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialisation() {
-        use randombytes::randombytes;
-        use test_utils::round_trip;
+        use crate::test_utils::round_trip;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -120,7 +118,7 @@ mod test_m {
 #[cfg(test)]
 mod bench_m {
     extern crate test;
-    use randombytes::randombytes;
+    use crate::randombytes::randombytes;
     use super::*;
 
     const BENCH_SIZES: [usize; 14] = [0, 1, 2, 4, 8, 16, 32, 64,
@@ -239,11 +237,11 @@ impl State {
 
 #[cfg(test)]
 mod test_s {
+    use crate::randombytes::randombytes;
     use super::*;
 
     #[test]
     fn test_auth_eq_auth_state() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -257,7 +255,6 @@ mod test_s {
 
     #[test]
     fn test_auth_eq_auth_state_chunked() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);

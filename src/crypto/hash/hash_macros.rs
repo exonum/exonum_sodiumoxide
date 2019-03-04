@@ -89,12 +89,12 @@ impl fmt::Debug for State {
 #[cfg(feature = "default")]
 #[cfg(test)]
 mod test_encode {
+    use crate::randombytes::randombytes;
+    use crate::test_utils::round_trip;
     use super::*;
-    use test_utils::round_trip;
 
     #[test]
     fn test_serialisation() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let m = randombytes(i);
             let d = hash(&m[..]);
@@ -107,7 +107,7 @@ mod test_encode {
 #[cfg(test)]
 mod bench_m {
     extern crate test;
-    use randombytes::randombytes;
+    use crate::randombytes::randombytes;
     use super::*;
 
     const BENCH_SIZES: [usize; 14] = [0, 1, 2, 4, 8, 16, 32, 64,

@@ -1,8 +1,8 @@
 //! `crypto_pwhash_scryptsalsa208sha256`, a particular combination of Scrypt, Salsa20/8
 //! and SHA-256
+use crate::randombytes::randombytes_into;
 use ffi;
 use libc::c_ulonglong;
-use randombytes::randombytes_into;
 
 /// Number of bytes in a `Salt`.
 pub const SALTBYTES: usize = ffi::crypto_pwhash_scryptsalsa208sha256_SALTBYTES;
@@ -180,6 +180,7 @@ pub fn pwhash_verify(&HashedPassword(ref str_): &HashedPassword, passwd: &[u8]) 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::randombytes::randombytes;
 
     #[test]
     fn test_derive_key() {
@@ -201,13 +202,13 @@ mod test {
             &salt,
             OPSLIMIT_INTERACTIVE,
             MEMLIMIT_INTERACTIVE,
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(key, key_expected);
     }
 
     #[test]
     fn test_pwhash_verify() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let pw = randombytes(i);
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();
@@ -217,7 +218,6 @@ mod test {
 
     #[test]
     fn test_pwhash_verify_tamper() {
-        use randombytes::randombytes;
         for i in 0..16usize {
             let mut pw = randombytes(i);
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();
@@ -232,8 +232,7 @@ mod test {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialisation() {
-        use randombytes::randombytes;
-        use test_utils::round_trip;
+        use crate::test_utils::round_trip;
         for i in 0..32usize {
             let pw = randombytes(i);
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();

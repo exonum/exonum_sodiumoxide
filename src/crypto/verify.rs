@@ -43,11 +43,10 @@ pub fn verify_64(x: &[u8; 64], y: &[u8; 64]) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::randombytes::randombytes_into;
 
     #[test]
     fn test_verify_16() {
-        use randombytes::randombytes_into;
-
         for _ in 0usize..256 {
             let mut x = [0; 16];
             let mut y = [0; 16];
@@ -64,8 +63,6 @@ mod test {
 
     #[test]
     fn test_verify_32() {
-        use randombytes::randombytes_into;
-
         for _ in 0usize..256 {
             let mut x = [0; 32];
             let mut y = [0; 32];
@@ -82,8 +79,6 @@ mod test {
 
     #[test]
     fn test_verify_64() {
-        use randombytes::randombytes_into;
-
         for _ in 0usize..256 {
             let mut x = [0; 64];
             let mut y = [0; 64];
