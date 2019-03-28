@@ -64,9 +64,6 @@ extern crate libsodium_sys as ffi;
 extern crate rustc_serialize;
 #[cfg(any(test, feature = "serde"))]
 extern crate serde;
-#[cfg(not(feature = "std"))]
-#[macro_use]
-extern crate collections;
 #[cfg(all(test, not(feature = "std")))]
 extern crate std;
 

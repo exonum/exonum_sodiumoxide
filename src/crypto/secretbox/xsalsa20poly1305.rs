@@ -4,10 +4,10 @@
 //!
 //! This function is conjectured to meet the standard notions of privacy and
 //! authenticity.
+use crate::randombytes::randombytes_into;
 use ffi;
 #[cfg(not(feature = "std"))]
 use prelude::*;
-use randombytes::randombytes_into;
 
 /// Number of bytes in `Key`.
 pub const KEYBYTES: usize = ffi::crypto_secretbox_xsalsa20poly1305_KEYBYTES;
@@ -135,10 +135,10 @@ pub fn open_detached(
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::randombytes::randombytes;
 
     #[test]
     fn test_seal_open() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -151,7 +151,6 @@ mod test {
 
     #[test]
     fn test_seal_open_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -171,7 +170,6 @@ mod test {
 
     #[test]
     fn test_seal_open_detached() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -185,7 +183,6 @@ mod test {
 
     #[test]
     fn test_seal_combined_then_open_detached() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -200,7 +197,6 @@ mod test {
 
     #[test]
     fn test_seal_detached_then_open_combined() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let k = gen_key();
             let m = randombytes(i);
@@ -216,7 +212,6 @@ mod test {
 
     #[test]
     fn test_seal_open_detached_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let k = gen_key();
             let mut m = randombytes(i);
@@ -301,7 +296,7 @@ mod test {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialisation() {
-        use test_utils::round_trip;
+        use crate::test_utils::round_trip;
         for _ in 0..256usize {
             let k = gen_key();
             let n = gen_nonce();

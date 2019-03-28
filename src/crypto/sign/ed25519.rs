@@ -261,10 +261,10 @@ impl Default for State {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::randombytes::randombytes;
 
     #[test]
     fn test_streaming_sign() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -279,7 +279,6 @@ mod test {
 
     #[test]
     fn test_chunks_sign() {
-        use randombytes::randombytes;
         let (pk, sk) = gen_keypair();
         let mut creation_state = State::init();
         let mut validator_state = State::init();
@@ -294,7 +293,6 @@ mod test {
 
     #[test]
     fn test_sign_verify() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -306,7 +304,6 @@ mod test {
 
     #[test]
     fn test_sign_verify_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -321,7 +318,6 @@ mod test {
 
     #[test]
     fn test_sign_verify_detached() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -332,7 +328,6 @@ mod test {
 
     #[test]
     fn test_sign_verify_detached_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -347,7 +342,7 @@ mod test {
 
     #[test]
     fn test_sign_verify_seed() {
-        use randombytes::{randombytes, randombytes_into};
+        use crate::randombytes::randombytes_into;
         for i in 0..256usize {
             let mut seedbuf = [0; 32];
             randombytes_into(&mut seedbuf);
@@ -362,7 +357,7 @@ mod test {
 
     #[test]
     fn test_sign_verify_tamper_seed() {
-        use randombytes::{randombytes, randombytes_into};
+        use crate::randombytes::randombytes_into;
         for i in 0..32usize {
             let mut seedbuf = [0; 32];
             randombytes_into(&mut seedbuf);
@@ -446,8 +441,7 @@ mod test {
     #[cfg(feature = "serde")]
     #[test]
     fn test_serialisation() {
-        use randombytes::randombytes;
-        use test_utils::round_trip;
+        use crate::test_utils::round_trip;
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
             let m = randombytes(i);
@@ -460,11 +454,10 @@ mod test {
 
     #[test]
     fn test_crypto_sign_ed25519_to_curve25519() {
-        use crypto::scalarmult::curve25519::{scalarmult_base, GroupElement, Scalar};
+        use crate::crypto::scalarmult::curve25519::{scalarmult_base, GroupElement, Scalar};
 
         let (pk, sk) = gen_keypair();
         let (PublicKey(ref pk), SecretKey(ref sk)) = convert_ed_keypair_to_curve25519(pk, sk);
-
         let secret_key = Scalar::from_slice(&sk[..SCALARMULTBYTES]).unwrap();
         let GroupElement(public_key) = scalarmult_base(&secret_key);
 
@@ -492,7 +485,7 @@ mod test {
 mod bench {
     extern crate test;
     use super::*;
-    use randombytes::randombytes;
+    use crate::randombytes::randombytes;
 
     const BENCH_SIZES: [usize; 14] = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
 

@@ -44,7 +44,7 @@ mod test {
 
     #[test]
     fn test_memcmp() {
-        use randombytes::randombytes;
+        use crate::randombytes::randombytes;
 
         for i in 0usize..256 {
             let x = randombytes(i);

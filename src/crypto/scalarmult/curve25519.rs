@@ -54,7 +54,7 @@ pub fn scalarmult_base(&Scalar(ref n): &Scalar) -> GroupElement {
 #[cfg(test)]
 mod test {
     use super::*;
-    use randombytes::randombytes_into;
+    use crate::randombytes::randombytes_into;
 
     #[test]
     fn test_vector_1() {
@@ -150,7 +150,7 @@ mod test {
 mod bench {
     extern crate test;
     use super::*;
-    use randombytes::randombytes_into;
+    use crate::randombytes::randombytes_into;
 
     #[bench]
     fn bench_scalarmult(b: &mut test::Bencher) {

@@ -59,10 +59,10 @@ pub fn open(
 mod test {
     use super::super::super::box_::curve25519xsalsa20poly1305 as box_;
     use super::*;
+    use crate::randombytes::randombytes;
 
     #[test]
     fn test_seal_open() {
-        use randombytes::randombytes;
         for i in 0..256usize {
             let (pk, sk) = box_::gen_keypair();
             let m = randombytes(i);
@@ -74,7 +74,6 @@ mod test {
 
     #[test]
     fn test_seal_open_tamper() {
-        use randombytes::randombytes;
         for i in 0..32usize {
             let (pk, sk) = box_::gen_keypair();
             let m = randombytes(i);

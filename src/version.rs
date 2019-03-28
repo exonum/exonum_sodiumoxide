@@ -29,7 +29,7 @@ pub fn version_minor() -> usize {
 mod test {
     #[test]
     fn test_version_string() {
-        use version::version_string;
+        use crate::version::version_string;
         assert!(!version_string().is_empty());
     }
 }
