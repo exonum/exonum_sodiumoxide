@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "exonum_sodiumoxide"
 readme = "README.md"
 repository = "https://github.com/exonum/exonum_sodiumoxide"
-version = "0.0.21"
+version = "0.0.22"
 edition = "2018"
 
 [badges]
@@ -15,15 +15,15 @@ appveyor = { repository = "exonum/exonum_sodiumoxide" }
 travis-ci = { repository = "exonum/exonum_sodiumoxide" }
 
 [dependencies]
-libc = "0.2.49"
-exonum_libsodium-sys = { version = "0.0.21", path = "libsodium-sys" }
-serde = { version="1.0.89", optional = true }
+libc = "0.2.0"
+exonum_libsodium-sys = { version = "0.0.22", path = "libsodium-sys" }
+serde = { version="1.0", optional = true }
 
 [dev-dependencies]
-serde = "1.0.89"
-serde_json = "1.0.39"
-rustc-serialize = "0.3.24"
-rmp-serde = "0.13.7"
+serde = "1.0"
+serde_json = "1.0"
+rustc-serialize = "0.3.0"
+rmp-serde = "0.13.0"
 
 [features]
 std = []
