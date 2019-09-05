@@ -2,7 +2,7 @@ pub const crypto_kx_PUBLICKEYBYTES: u32 = 32;
 pub const crypto_kx_SECRETKEYBYTES: u32 = 32;
 pub const crypto_kx_SEEDBYTES: u32 = 32;
 pub const crypto_kx_SESSIONKEYBYTES: u32 = 32;
-pub const crypto_kx_PRIMITIVE: &'static [u8; 14usize] = b"x25519blake2b\0";
+pub const crypto_kx_PRIMITIVE: &[u8; 14usize] = b"x25519blake2b\0";
 
 extern "C" {
     pub fn crypto_kdf_keygen(k: *mut libc::c_uchar);
