@@ -50,7 +50,6 @@ fn main() {
 
     if should_build {
         use flate2::read::GzDecoder;
-        use std::env;
         use std::fs::{self, File};
         use std::process::Command;
         use tar::Archive;

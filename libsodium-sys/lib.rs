@@ -53,3 +53,6 @@ include!("src/crypto_verify_64.rs");
 include!("src/randombytes.rs");
 include!("src/utils.rs");
 include!("src/version.rs");
+
+include!("src/crypto_kx.rs");
+

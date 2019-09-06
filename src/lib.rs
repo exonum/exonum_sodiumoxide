@@ -102,6 +102,7 @@ pub mod crypto {
     pub mod auth;
     pub mod box_;
     pub mod hash;
+    pub mod kx;
     pub mod onetimeauth;
     pub mod pwhash;
     pub mod scalarmult;
