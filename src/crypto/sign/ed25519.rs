@@ -207,7 +207,7 @@ impl State {
     /// `init()` initialize a streaming signing state.
     pub fn init() -> State {
         unsafe {
-            let mut s = mem::uninitialized();
+            let mut s = mem::MaybeUninit::uninit().assume_init();
             ffi::crypto_sign_ed25519ph_init(&mut s);
             State(s)
         }

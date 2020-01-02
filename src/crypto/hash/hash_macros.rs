@@ -45,7 +45,7 @@ impl State {
     /// `init()` initialize a streaming hashing state.
     pub fn init() -> State {
         unsafe {
-            let mut s = mem::uninitialized();
+            let mut s = mem::MaybeUninit::uninit().assume_init();
             $init_name(&mut s);
             State(s)
         }

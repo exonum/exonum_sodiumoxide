@@ -209,7 +209,7 @@ impl State {
     /// `init()` initializes an authentication structure using a secret key 'k'.
     pub fn init(k: &[u8]) -> State {
         unsafe {
-            let mut s = mem::uninitialized();
+            let mut s = mem::MaybeUninit::uninit().assume_init();
             $init_name(&mut s, k.as_ptr(), k.len());
             State(s)
         }
