@@ -1,8 +1,8 @@
 extern crate num_cpus;
 extern crate pkg_config;
 
-const VERSION: &'static str = "1.0.17";
-const MIN_VERSION: &'static str = "1.0.12";
+const VERSION: &str = "1.0.17";
+const MIN_VERSION: &str = "1.0.12";
 
 #[cfg(not(windows))]
 fn main() {
@@ -18,24 +18,22 @@ fn main() {
 
     if force_build {
         should_build = true;
-    } else {
-        if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-            link_with_sodium_library(&lib_dir, "sodium")
-        } else if let Ok(lib_details) = pkg_config::Config::new()
-            .atleast_version(MIN_VERSION)
-            .probe("libsodium")
-        {
-            println!(" === found libsodium: {:#?}", lib_details);
-            if lib_details.version != VERSION {
-                println!(
-                    "cargo:warning=Using libsodium version {}. This crate is tested against {} \
+    } else if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
+        link_with_sodium_library(&lib_dir, "sodium")
+    } else if let Ok(lib_details) = pkg_config::Config::new()
+        .atleast_version(MIN_VERSION)
+        .probe("libsodium")
+    {
+        println!(" === found libsodium: {:#?}", lib_details);
+        if lib_details.version != VERSION {
+            println!(
+                "cargo:warning=Using libsodium version {}. This crate is tested against {} \
                      and may not be fully compatible with {}.",
-                    lib_details.version, VERSION, lib_details.version
-                );
-            }
-        } else {
-            should_build = true;
+                lib_details.version, VERSION, lib_details.version
+            );
         }
+    } else {
+        should_build = true;
     }
 
     if should_build {
@@ -47,13 +45,15 @@ fn main() {
         // Download gz tarball
         let basename = "libsodium-".to_string() + VERSION;
         let gz_filename = basename.clone() + ".tar.gz";
-        let url = "https://github.com/jedisct1/libsodium/releases/download/".to_string() + VERSION
-            + "/" + &gz_filename;
+        let url = "https://github.com/jedisct1/libsodium/releases/download/".to_string()
+            + VERSION
+            + "/"
+            + &gz_filename;
         let mut install_dir = get_install_dir();
         let mut source_dir = env::var("OUT_DIR").unwrap() + "/source";
         // Avoid issues with paths containing spaces by falling back to using /tmp
         let target = env::var("TARGET").unwrap();
-        if install_dir.contains(" ") {
+        if install_dir.contains(' ') {
             let fallback_path = "/tmp/".to_string() + &basename + "/" + &target;
             install_dir = fallback_path.clone() + "/installed";
             source_dir = fallback_path.clone() + "/source";
@@ -97,7 +97,7 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
-        let target_parts: Vec<&str> = target.split("-").collect();
+        let target_parts: Vec<&str> = target.split('-').collect();
         let mut target_arch = target_parts[0];
         if target_arch == "aarch64" {
             target_arch = "arm64";
@@ -109,27 +109,36 @@ fn main() {
         let (cc, mut cflags) = if target.contains("i686") {
             (
                 format!("{} -m32", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")),
+                env::var("CFLAGS").unwrap_or_else(|_| String::from(" -march=i686 -O3")),
             )
         } else {
             (
                 format!("{}", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")),
+                env::var("CFLAGS").unwrap_or_else(|_| String::from(" -march=native -O3")),
             )
         };
 
         if target_sys == "ios" {
-            let xcode_dir_output = Command::new("xcode-select").arg("-p").output()
+            let xcode_dir_output = Command::new("xcode-select")
+                .arg("-p")
+                .output()
                 .expect("failed to execute xcode-select");
             let xcode_dir_stdout = String::from_utf8_lossy(&xcode_dir_output.stdout);
-            let xcode_dir  = xcode_dir_stdout.trim();
+            let xcode_dir = xcode_dir_stdout.trim();
 
-            let platform = if target_arch == "arm64" { "iPhoneOS" } else { "iPhoneSimulator" };
+            let platform = if target_arch == "arm64" {
+                "iPhoneOS"
+            } else {
+                "iPhoneSimulator"
+            };
             let base_dir = format!("{}/Platforms/{}.platform/Developer", xcode_dir, platform);
             let sdk = format!("{}/SDKs/{}.sdk", base_dir, platform);
 
             path = format!("{}/usr/bin:{}/usr/sbin:{}", base_dir, base_dir, path);
-            cflags = env::var("CFLAGS").unwrap_or(format!("-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0", target_arch, sdk));
+            cflags = env::var("CFLAGS").unwrap_or(format!(
+                "-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0",
+                target_arch, sdk
+            ));
         }
 
         let prefix_arg = format!("--prefix={}", install_dir);
@@ -340,7 +349,11 @@ fn download_compressed_file() -> String {
     let zip_path = get_install_dir() + "/" + &zip_filename;
     let command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
                    ((New-Object System.Net.WebClient).DownloadFile(\""
-        .to_string() + &url + "\", \"" + &zip_path + "\"))";
+        .to_string()
+        + &url
+        + "\", \""
+        + &zip_path
+        + "\"))";
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
         .arg("-Command")
@@ -440,7 +453,11 @@ fn link_with_sodium_library(lib_dir: &str, libname: &str) {
     println!("cargo:rustc-link-lib={0}={1}", mode, libname);
 }
 
-#[cfg(all(windows, not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
+#[cfg(all(
+    windows,
+    not(target_env = "msvc"),
+    not(feature = "use-installed-libsodium")
+))]
 fn main() {
     use flate2::read::GzDecoder;
     use std::fs::{self, File};
