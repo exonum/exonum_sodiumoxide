@@ -20,17 +20,7 @@ fn main() {
         should_build = true;
     } else {
         if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-            println!("cargo:rustc-link-search=native={}", lib_dir);
-            let mode = match env::var_os("SODIUM_STATIC") {
-                Some(_) => "static",
-                None => "dylib",
-            };
-            println!("cargo:rustc-link-lib={0}=sodium", mode);
-            println!(
-                "cargo:warning=Using unknown libsodium version. This crate is tested against \
-                 {} and may not be fully compatible with other versions.",
-                VERSION
-            );
+            link_with_sodium_library(&lib_dir, "sodium")
         } else if let Ok(lib_details) = pkg_config::Config::new()
             .atleast_version(MIN_VERSION)
             .probe("libsodium")
@@ -378,63 +368,76 @@ fn main() {
     use std::path::Path;
     use zip::ZipArchive;
 
-    check_powershell_version();
-
-    // Download zip file
-    let install_dir = get_install_dir();
-    let lib_install_dir = Path::new(&install_dir).join("lib");
-    fs::create_dir_all(&lib_install_dir).unwrap();
-    let zip_path = download_compressed_file();
-
-    // Unpack the zip file
-    let zip_file = File::open(&zip_path).unwrap();
-    let mut zip_archive = ZipArchive::new(zip_file).unwrap();
-
-    // Extract just the appropriate version of libsodium.lib and headers to the install path.  For
-    // now, only handle MSVC 2015.
-    let arch_path = if cfg!(target_pointer_width = "32") {
-        Path::new("Win32")
-    } else if cfg!(target_pointer_width = "64") {
-        Path::new("x64")
+    if let Ok(lib_dir) = std::env::var("SODIUM_LIB_DIR") {
+        link_with_sodium_library(&lib_dir, "libsodium");
     } else {
-        panic!("target_pointer_width not 32 or 64")
-    };
+        check_powershell_version();
 
-    let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
-    for i in 0..zip_archive.len() {
-        let mut entry = zip_archive.by_index(i).unwrap();
-        let entry_name = entry.name().to_string();
-        let entry_path = Path::new(&entry_name);
-        let opt_install_path = if entry_path.starts_with("include") {
-            let is_dir = (entry.unix_mode().unwrap() & S_IFDIR as u32) != 0;
-            if is_dir {
-                let _ = fs::create_dir(&Path::new(&install_dir).join(entry_path));
-                None
-            } else {
-                Some(Path::new(&install_dir).join(entry_path))
-            }
-        } else if entry_path == unpacked_lib {
-            Some(lib_install_dir.join("libsodium.lib"))
+        // Download zip file
+        let install_dir = get_install_dir();
+        let lib_install_dir = Path::new(&install_dir).join("lib");
+        fs::create_dir_all(&lib_install_dir).unwrap();
+        let zip_path = download_compressed_file();
+
+        // Unpack the zip file
+        let zip_file = File::open(&zip_path).unwrap();
+        let mut zip_archive = ZipArchive::new(zip_file).unwrap();
+
+        // Extract just the appropriate version of libsodium.lib and headers to the install path.  For
+        // now, only handle MSVC 2015.
+        let arch_path = if cfg!(target_pointer_width = "32") {
+            Path::new("Win32")
+        } else if cfg!(target_pointer_width = "64") {
+            Path::new("x64")
         } else {
-            None
+            panic!("target_pointer_width not 32 or 64")
         };
-        if let Some(full_install_path) = opt_install_path {
-            let mut buffer = Vec::with_capacity(entry.size() as usize);
-            assert_eq!(entry.size(), entry.read_to_end(&mut buffer).unwrap() as u64);
-            let mut file = File::create(&full_install_path).unwrap();
-            file.write_all(&buffer).unwrap();
+
+        let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
+        for i in 0..zip_archive.len() {
+            let mut entry = zip_archive.by_index(i).unwrap();
+            let entry_name = entry.name().to_string();
+            let entry_path = Path::new(&entry_name);
+            let opt_install_path = if entry_path.starts_with("include") {
+                let is_dir = (entry.unix_mode().unwrap() & S_IFDIR as u32) != 0;
+                if is_dir {
+                    let _ = fs::create_dir(&Path::new(&install_dir).join(entry_path));
+                    None
+                } else {
+                    Some(Path::new(&install_dir).join(entry_path))
+                }
+            } else if entry_path == unpacked_lib {
+                Some(lib_install_dir.join("libsodium.lib"))
+            } else {
+                None
+            };
+            if let Some(full_install_path) = opt_install_path {
+                let mut buffer = Vec::with_capacity(entry.size() as usize);
+                assert_eq!(entry.size(), entry.read_to_end(&mut buffer).unwrap() as u64);
+                let mut file = File::create(&full_install_path).unwrap();
+                file.write_all(&buffer).unwrap();
+            }
         }
+
+        // Clean up
+        let _ = fs::remove_file(zip_path);
+
+        println!("cargo:rustc-link-lib=static=libsodium");
+        println!(
+            "cargo:rustc-link-search=native={}",
+            lib_install_dir.display()
+        );
+        println!("cargo:include={}/include", install_dir);
     }
+}
 
-    // Clean up
-    let _ = fs::remove_file(zip_path);
-
-    println!("cargo:rustc-link-lib=static=libsodium");
-    println!(
-        "cargo:rustc-link-search=native={}",
-        lib_install_dir.display()
-    );
-    println!("cargo:include={}/include", install_dir);
+fn link_with_sodium_library(lib_dir: &str, libname: &str) {
+    println!("cargo:rustc-link-search=native={}", lib_dir);
+    let mode = match std::env::var_os("SODIUM_STATIC") {
+        Some(_) => "static",
+        None => "dylib",
+    };
+    println!("cargo:rustc-link-lib={0}={1}", mode, libname);
 }
 
 #[cfg(all(windows, not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
@@ -444,52 +447,56 @@ fn main() {
     use std::path::Path;
     use tar::Archive;
 
-    check_powershell_version();
-
-    // Download gz tarball
-    let install_dir = get_install_dir();
-    let lib_install_dir = Path::new(&install_dir).join("lib");
-    fs::create_dir_all(&lib_install_dir).unwrap();
-    let gz_path = download_compressed_file();
-
-    // Unpack the tarball
-    let gz_archive = File::open(&gz_path).unwrap();
-    let gz_decoder = GzDecoder::new(gz_archive);
-    let mut archive = Archive::new(gz_decoder);
-
-    // Extract just the appropriate version of libsodium.a and headers to the install path
-    let arch_path = if cfg!(target_pointer_width = "32") {
-        Path::new("libsodium-win32")
-    } else if cfg!(target_pointer_width = "64") {
-        Path::new("libsodium-win64")
+    if let Ok(lib_dir) = std::env::var("SODIUM_LIB_DIR") {
+        link_with_sodium_library(&lib_dir, "libsodium");
     } else {
-        panic!("target_pointer_width not 32 or 64")
-    };
+        check_powershell_version();
 
-    let unpacked_include = arch_path.join("include");
-    let unpacked_lib = arch_path.join("lib\\libsodium.a");
-    let entries = archive.entries().unwrap();
-    for entry_result in entries {
-        let mut entry = entry_result.unwrap();
-        let entry_path = entry.path().unwrap().to_path_buf();
-        let full_install_path = if entry_path.starts_with(&unpacked_include) {
-            let include_file = entry_path.strip_prefix(arch_path).unwrap();
-            Path::new(&install_dir).join(include_file)
-        } else if entry_path == unpacked_lib {
-            lib_install_dir.join("libsodium.a")
+        // Download gz tarball
+        let install_dir = get_install_dir();
+        let lib_install_dir = Path::new(&install_dir).join("lib");
+        fs::create_dir_all(&lib_install_dir).unwrap();
+        let gz_path = download_compressed_file();
+
+        // Unpack the tarball
+        let gz_archive = File::open(&gz_path).unwrap();
+        let gz_decoder = GzDecoder::new(gz_archive);
+        let mut archive = Archive::new(gz_decoder);
+
+        // Extract just the appropriate version of libsodium.a and headers to the install path
+        let arch_path = if cfg!(target_pointer_width = "32") {
+            Path::new("libsodium-win32")
+        } else if cfg!(target_pointer_width = "64") {
+            Path::new("libsodium-win64")
         } else {
-            continue;
+            panic!("target_pointer_width not 32 or 64")
         };
-        entry.unpack(full_install_path).unwrap();
+
+        let unpacked_include = arch_path.join("include");
+        let unpacked_lib = arch_path.join("lib\\libsodium.a");
+        let entries = archive.entries().unwrap();
+        for entry_result in entries {
+            let mut entry = entry_result.unwrap();
+            let entry_path = entry.path().unwrap().to_path_buf();
+            let full_install_path = if entry_path.starts_with(&unpacked_include) {
+                let include_file = entry_path.strip_prefix(arch_path).unwrap();
+                Path::new(&install_dir).join(include_file)
+            } else if entry_path == unpacked_lib {
+                lib_install_dir.join("libsodium.a")
+            } else {
+                continue;
+            };
+            entry.unpack(full_install_path).unwrap();
+        }
+
+        // Clean up
+        let _ = fs::remove_file(gz_path);
+
+        println!("cargo:rustc-link-lib=static=sodium");
+        println!(
+            "cargo:rustc-link-search=native={}",
+            lib_install_dir.display()
+        );
+        println!("cargo:include={}/include", install_dir);
     }
-
-    // Clean up
-    let _ = fs::remove_file(gz_path);
-
-    println!("cargo:rustc-link-lib=static=sodium");
-    println!(
-        "cargo:rustc-link-search=native={}",
-        lib_install_dir.display()
-    );
-    println!("cargo:include={}/include", install_dir);
 }

@@ -16,6 +16,17 @@
 //! functions in `crypto::scalarmult`, `crypto::stream`, `crypto::auth` and
 //! `crypto::onetimeauth`.
 //!
+//! ## Building
+//!
+//! Unless `SODIUM_LIB_DIR` environment variable is specified, the library will automatically
+//! download C sources from the internet and link them with Rust. If `SODIUM_LIB_DIR` is specified,
+//! this path will be used to search for a local compiled library. By default, dynamic linkage is
+//! used. To use static linkage, specify `SODIUM_STATIC` environment variable.
+//!
+//! #### Note
+//!
+//! On Windows, the location of the library must also be in `Path` for linker to work correctly.
+//!
 //! ## Thread Safety
 //! All functions in this library are thread-safe provided that the `init()`
 //! function has been called during program execution.
