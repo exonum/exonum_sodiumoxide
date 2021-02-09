@@ -180,23 +180,25 @@ fn main() {
             let stdout = String::from_utf8_lossy(&lsb_release_output.stdout);
 
             let mut lines = stdout.split(|c: char| c.is_whitespace());
+
             let distro = lines.next().expect("Missing distributive name");
-            let version = lines.next().expect("Missing distributive version");
-
-            let mut lines = version.split('.');
-            let major: u32 = lines
-                .next()
-                .expect("Missing major version")
-                .parse()
-                .expect("Major version is not a number");
-
-            match distro {
-                "Ubuntu" if major < 15 => DISABLE_PIE,
-                // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
-                "Ubuntu" if version == "16.04" => DISABLE_PIE,
-                "Ubuntu" => "",
+            if distro == "Ubuntu" {
+                let version = lines.next().expect("Missing distributive version");
+                let mut lines = version.split('.');
+                let major: u32 = lines
+                    .next()
+                    .expect("Missing major version")
+                    .parse()
+                    .expect("Major version is not a number");
+                if major < 15 || version == "16.04" {
+                    // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
+                    DISABLE_PIE
+                } else {
+                    ""
+                }
+            } else {
                 // Any other distribution.
-                _ => DISABLE_PIE,
+                DISABLE_PIE
             }
         };
         let disable_pie_arg = get_disable_pie_arg();
