@@ -1,6 +1,6 @@
 //! `SipHash-2-4`
+
 use crate::randombytes::randombytes_into;
-use ffi;
 use libc::c_ulonglong;
 
 /// Number of bytes in a `Digest`.

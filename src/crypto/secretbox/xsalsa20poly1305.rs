@@ -4,8 +4,8 @@
 //!
 //! This function is conjectured to meet the standard notions of privacy and
 //! authenticity.
+
 use crate::randombytes::randombytes_into;
-use ffi;
 #[cfg(not(feature = "std"))]
 use prelude::*;
 

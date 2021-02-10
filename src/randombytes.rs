@@ -1,5 +1,5 @@
 //! Cryptographic random number generation.
-use ffi;
+
 #[cfg(not(feature = "std"))]
 use prelude::*;
 use std::iter::repeat;

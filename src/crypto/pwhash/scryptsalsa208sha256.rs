@@ -1,7 +1,7 @@
 //! `crypto_pwhash_scryptsalsa208sha256`, a particular combination of Scrypt, Salsa20/8
 //! and SHA-256
+
 use crate::randombytes::randombytes_into;
-use ffi;
 use libc::c_ulonglong;
 
 /// Number of bytes in a `Salt`.
