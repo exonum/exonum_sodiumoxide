@@ -1,8 +1,8 @@
 extern crate num_cpus;
 extern crate pkg_config;
 
-const VERSION: &'static str = "1.0.17";
-const MIN_VERSION: &'static str = "1.0.12";
+const VERSION: &str = "1.0.17";
+const MIN_VERSION: &str = "1.0.12";
 
 #[cfg(not(windows))]
 fn main() {
@@ -18,34 +18,32 @@ fn main() {
 
     if force_build {
         should_build = true;
-    } else {
-        if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
-            println!("cargo:rustc-link-search=native={}", lib_dir);
-            let mode = match env::var_os("SODIUM_STATIC") {
-                Some(_) => "static",
-                None => "dylib",
-            };
-            println!("cargo:rustc-link-lib={0}=sodium", mode);
+    } else if let Ok(lib_dir) = env::var("SODIUM_LIB_DIR") {
+        println!("cargo:rustc-link-search=native={}", lib_dir);
+        let mode = match env::var_os("SODIUM_STATIC") {
+            Some(_) => "static",
+            None => "dylib",
+        };
+        println!("cargo:rustc-link-lib={0}=sodium", mode);
+        println!(
+            "cargo:warning=Using unknown libsodium version. This crate is tested against \
+             {} and may not be fully compatible with other versions.",
+            VERSION
+        );
+    } else if let Ok(lib_details) = pkg_config::Config::new()
+        .atleast_version(MIN_VERSION)
+        .probe("libsodium")
+    {
+        println!(" === found libsodium: {:#?}", lib_details);
+        if lib_details.version != VERSION {
             println!(
-                "cargo:warning=Using unknown libsodium version. This crate is tested against \
-                 {} and may not be fully compatible with other versions.",
-                VERSION
+                "cargo:warning=Using libsodium version {}. This crate is tested against {} \
+                 and may not be fully compatible with {}.",
+                lib_details.version, VERSION, lib_details.version
             );
-        } else if let Ok(lib_details) = pkg_config::Config::new()
-            .atleast_version(MIN_VERSION)
-            .probe("libsodium")
-        {
-            println!(" === found libsodium: {:#?}", lib_details);
-            if lib_details.version != VERSION {
-                println!(
-                    "cargo:warning=Using libsodium version {}. This crate is tested against {} \
-                     and may not be fully compatible with {}.",
-                    lib_details.version, VERSION, lib_details.version
-                );
-            }
-        } else {
-            should_build = true;
         }
+    } else {
+        should_build = true;
     }
 
     if should_build {
@@ -63,7 +61,7 @@ fn main() {
         let mut source_dir = env::var("OUT_DIR").unwrap() + "/source";
         // Avoid issues with paths containing spaces by falling back to using /tmp
         let target = env::var("TARGET").unwrap();
-        if install_dir.contains(" ") {
+        if install_dir.contains(' ') {
             let fallback_path = "/tmp/".to_string() + &basename + "/" + &target;
             install_dir = fallback_path.clone() + "/installed";
             source_dir = fallback_path.clone() + "/source";
@@ -107,7 +105,7 @@ fn main() {
         let _ = fs::remove_file(gz_path);
 
         // Run `./configure`
-        let target_parts: Vec<&str> = target.split("-").collect();
+        let target_parts: Vec<&str> = target.split('-').collect();
         let mut target_arch = target_parts[0];
         if target_arch == "aarch64" {
             target_arch = "arm64";
@@ -119,12 +117,12 @@ fn main() {
         let (cc, mut cflags) = if target.contains("i686") {
             (
                 format!("{} -m32", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=i686 -O3")),
+                env::var("CFLAGS").unwrap_or_else(|_| String::from(" -march=i686 -O3")),
             )
         } else {
             (
                 format!("{}", build.get_compiler().path().display()),
-                env::var("CFLAGS").unwrap_or(String::from(" -march=native -O3")),
+                env::var("CFLAGS").unwrap_or_else(|_| String::from(" -march=native -O3")),
             )
         };
 
@@ -180,23 +178,25 @@ fn main() {
             let stdout = String::from_utf8_lossy(&lsb_release_output.stdout);
 
             let mut lines = stdout.split(|c: char| c.is_whitespace());
+
             let distro = lines.next().expect("Missing distributive name");
-            let version = lines.next().expect("Missing distributive version");
-
-            let mut lines = version.split('.');
-            let major: u32 = lines
-                .next()
-                .expect("Missing major version")
-                .parse()
-                .expect("Major version is not a number");
-
-            match distro {
-                "Ubuntu" if major < 15 => DISABLE_PIE,
-                // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
-                "Ubuntu" if version == "16.04" => DISABLE_PIE,
-                "Ubuntu" => "",
+            if distro == "Ubuntu" {
+                let version = lines.next().expect("Missing distributive version");
+                let mut lines = version.split('.');
+                let major: u32 = lines
+                    .next()
+                    .expect("Missing major version")
+                    .parse()
+                    .expect("Major version is not a number");
+                if major < 15 || version == "16.04" {
+                    // Exclude 16.04 LTS - see https://jira.bf.local/browse/ECR-846
+                    DISABLE_PIE
+                } else {
+                    ""
+                }
+            } else {
                 // Any other distribution.
-                _ => DISABLE_PIE,
+                DISABLE_PIE
             }
         };
         let disable_pie_arg = get_disable_pie_arg();

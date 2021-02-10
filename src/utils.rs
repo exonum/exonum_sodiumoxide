@@ -1,5 +1,4 @@
 //! Libsodium utility functions
-use ffi;
 
 /// `memzero()` tries to effectively zero out the data in `x` even if
 /// optimizations are being applied to the code.

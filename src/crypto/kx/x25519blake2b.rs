@@ -1,7 +1,5 @@
 //! `x25519blake2b` is the current default key exchange scheme of `libsodium`.
 
-use ffi;
-
 /// Number of bytes in a `PublicKey`.
 pub const PUBLICKEYBYTES: usize = ffi::crypto_kx_PUBLICKEYBYTES as usize;
 
