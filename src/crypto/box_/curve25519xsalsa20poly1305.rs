@@ -85,9 +85,8 @@ pub fn seal(
     &SecretKey(ref sk): &SecretKey,
 ) -> Vec<u8> {
     let clen = m.len() + MACBYTES;
-    let mut c = Vec::with_capacity(clen);
+    let mut c = vec![0; clen];
     unsafe {
-        c.set_len(clen);
         ffi::crypto_box_easy(c.as_mut_ptr(), m.as_ptr(), m.len() as u64, n, pk, sk);
     }
     c
@@ -203,9 +202,8 @@ pub fn seal_precomputed(
     &PrecomputedKey(ref k): &PrecomputedKey,
 ) -> Vec<u8> {
     let clen = m.len() + MACBYTES;
-    let mut c = Vec::with_capacity(clen);
+    let mut c = vec![0; clen];
     unsafe {
-        c.set_len(clen);
         ffi::crypto_box_easy_afternm(c.as_mut_ptr(), m.as_ptr(), m.len() as u64, n, k);
     }
     c
@@ -330,7 +328,7 @@ mod test {
             let mut c = seal(&m, &n, &pk1, &sk2);
             for j in 0..c.len() {
                 c[j] ^= 0x20;
-                assert_eq!(Err(()), open(&mut c, &n, &pk2, &sk1));
+                assert_eq!(Err(()), open(&c, &n, &pk2, &sk1));
                 c[j] ^= 0x20;
             }
         }
@@ -348,7 +346,7 @@ mod test {
             let mut c = seal_precomputed(&m, &n, &k1);
             for j in 0..c.len() {
                 c[j] ^= 0x20;
-                assert_eq!(Err(()), open_precomputed(&mut c, &n, &k2));
+                assert_eq!(Err(()), open_precomputed(&c, &n, &k2));
                 c[j] ^= 0x20;
             }
         }

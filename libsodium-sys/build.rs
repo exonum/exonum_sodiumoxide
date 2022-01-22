@@ -1,15 +1,11 @@
-extern crate num_cpus;
-extern crate pkg_config;
+use std::{env, process::Command};
 
-const VERSION: &str = "1.0.17";
+const VERSION: &str = "1.0.18";
 const MIN_VERSION: &str = "1.0.12";
 
 #[cfg(not(windows))]
 fn main() {
-    use std::env;
-
     let mut should_build = false;
-
     let force_build = match env::var("SODIUM_BUILD").ok() {
         None => false,
         Some(ref x) if x == "0" => false,
@@ -49,20 +45,21 @@ fn main() {
     if should_build {
         use flate2::read::GzDecoder;
         use std::fs::{self, File};
-        use std::process::Command;
         use tar::Archive;
 
         // Download gz tarball
-        let basename = "libsodium-".to_string() + VERSION;
-        let gz_filename = basename.clone() + ".tar.gz";
-        let url = "https://github.com/jedisct1/libsodium/releases/download/".to_string() + VERSION
-            + "/" + &gz_filename;
+        let basename = format!("libsodium-{}", VERSION);
+        let gz_filename = format!("{}.tar.gz", &basename);
+        let url = format!(
+            "https://download.libsodium.org/libsodium/releases/{}",
+            &gz_filename
+        );
         let mut install_dir = get_install_dir();
         let mut source_dir = env::var("OUT_DIR").unwrap() + "/source";
         // Avoid issues with paths containing spaces by falling back to using /tmp
         let target = env::var("TARGET").unwrap();
         if install_dir.contains(' ') {
-            let fallback_path = "/tmp/".to_string() + &basename + "/" + &target;
+            let fallback_path = format!("/tmp/{}/{}", &basename, &target);
             install_dir = fallback_path.clone() + "/installed";
             source_dir = fallback_path.clone() + "/source";
             println!(
@@ -72,7 +69,7 @@ fn main() {
                 fallback_path
             );
         }
-        let gz_path = source_dir.clone() + "/" + &gz_filename;
+        let gz_path = format!("{}/{}", &source_dir, &gz_filename);
         fs::create_dir_all(&install_dir).unwrap();
         fs::create_dir_all(&source_dir).unwrap();
 
@@ -127,17 +124,26 @@ fn main() {
         };
 
         if target_sys == "ios" {
-            let xcode_dir_output = Command::new("xcode-select").arg("-p").output()
+            let xcode_dir_output = Command::new("xcode-select")
+                .arg("-p")
+                .output()
                 .expect("failed to execute xcode-select");
             let xcode_dir_stdout = String::from_utf8_lossy(&xcode_dir_output.stdout);
-            let xcode_dir  = xcode_dir_stdout.trim();
+            let xcode_dir = xcode_dir_stdout.trim();
 
-            let platform = if target_arch == "arm64" { "iPhoneOS" } else { "iPhoneSimulator" };
+            let platform = if target_arch == "arm64" {
+                "iPhoneOS"
+            } else {
+                "iPhoneSimulator"
+            };
             let base_dir = format!("{}/Platforms/{}.platform/Developer", xcode_dir, platform);
             let sdk = format!("{}/SDKs/{}.sdk", base_dir, platform);
 
             path = format!("{}/usr/bin:{}/usr/sbin:{}", base_dir, base_dir, path);
-            cflags = env::var("CFLAGS").unwrap_or(format!("-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0", target_arch, sdk));
+            cflags = env::var("CFLAGS").unwrap_or(format!(
+                "-arch {} -O3 -fembed-bitcode -isysroot {} -mios-version-min=6.0",
+                target_arch, sdk
+            ));
         }
 
         let prefix_arg = format!("--prefix={}", install_dir);
@@ -312,13 +318,12 @@ extern crate zip;
 
 #[cfg(not(feature = "use-installed-libsodium"))]
 fn get_install_dir() -> String {
-    use std::env;
     env::var("OUT_DIR").unwrap() + "/installed"
 }
 
 #[cfg(all(windows, not(feature = "use-installed-libsodium")))]
 fn check_powershell_version() {
-    let mut check_ps_version_cmd = ::std::process::Command::new("powershell");
+    let mut check_ps_version_cmd = Command::new("powershell");
     let check_ps_version_output = check_ps_version_cmd
         .arg("-Command")
         .arg("{If ($PSVersionTable.PSVersion.Major -lt 4) { exit 1 }}")
@@ -338,19 +343,24 @@ fn check_powershell_version() {
 
 #[cfg(all(windows, not(feature = "use-installed-libsodium")))]
 fn download_compressed_file() -> String {
-    use std::process::Command;
-
     let basename = "libsodium-".to_string() + VERSION;
     let zip_filename = if cfg!(target_env = "msvc") {
         basename.clone() + "-msvc.zip"
     } else {
         basename.clone() + "-mingw.tar.gz"
     };
-    let url = "https://download.libsodium.org/libsodium/releases/".to_string() + &zip_filename;
+    let url = format!(
+        "https://download.libsodium.org/libsodium/releases/{}",
+        &zip_filename,
+    );
     let zip_path = get_install_dir() + "/" + &zip_filename;
     let command = "([Net.ServicePointManager]::SecurityProtocol = 'Tls12') -and \
                    ((New-Object System.Net.WebClient).DownloadFile(\""
-        .to_string() + &url + "\", \"" + &zip_path + "\"))";
+        .to_string()
+        + &url
+        + "\", \""
+        + &zip_path
+        + "\"))";
     let mut download_cmd = Command::new("powershell");
     let download_output = download_cmd
         .arg("-Command")
@@ -373,9 +383,11 @@ fn download_compressed_file() -> String {
 #[cfg(all(windows, target_env = "msvc", not(feature = "use-installed-libsodium")))]
 fn main() {
     use libc::S_IFDIR;
-    use std::fs::{self, File};
-    use std::io::{Read, Write};
-    use std::path::Path;
+    use std::{
+        fs::{self, File},
+        io::{Read, Write},
+        path::Path,
+    };
     use zip::ZipArchive;
 
     check_powershell_version();
@@ -393,14 +405,14 @@ fn main() {
     // Extract just the appropriate version of libsodium.lib and headers to the install path.  For
     // now, only handle MSVC 2015.
     let arch_path = if cfg!(target_pointer_width = "32") {
-        Path::new("Win32")
+        Path::new("libsodium/Win32")
     } else if cfg!(target_pointer_width = "64") {
-        Path::new("x64")
+        Path::new("libsodium/x64")
     } else {
         panic!("target_pointer_width not 32 or 64")
     };
 
-    let unpacked_lib = arch_path.join("Release/v140/static/libsodium.lib");
+    let unpacked_lib = arch_path.join("Release/v142/static/libsodium.lib");
     for i in 0..zip_archive.len() {
         let mut entry = zip_archive.by_index(i).unwrap();
         let entry_name = entry.name().to_string();
@@ -437,7 +449,11 @@ fn main() {
     println!("cargo:include={}/include", install_dir);
 }
 
-#[cfg(all(windows, not(target_env = "msvc"), not(feature = "use-installed-libsodium")))]
+#[cfg(all(
+    windows,
+    not(target_env = "msvc"),
+    not(feature = "use-installed-libsodium")
+))]
 fn main() {
     use flate2::read::GzDecoder;
     use std::fs::{self, File};

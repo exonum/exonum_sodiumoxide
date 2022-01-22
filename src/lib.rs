@@ -48,10 +48,13 @@
 //!  `crypto::shorthash`
 #![crate_name = "exonum_sodiumoxide"]
 #![crate_type = "lib"]
-#![warn(missing_docs)]
-#![warn(non_upper_case_globals)]
-#![warn(non_camel_case_types)]
-#![warn(unused_qualifications)]
+#![warn(
+    missing_docs,
+    non_upper_case_globals,
+    non_camel_case_types,
+    unused_qualifications
+)]
+#![allow(clippy::result_unit_err)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(not(feature = "std"), feature(alloc))]
 #![cfg_attr(not(feature = "std"), feature(collections))]
@@ -60,8 +63,6 @@
 extern crate alloc;
 extern crate libc;
 extern crate libsodium_sys as ffi;
-#[cfg(test)]
-extern crate rustc_serialize;
 #[cfg(any(test, feature = "serde"))]
 extern crate serde;
 #[cfg(all(test, not(feature = "std")))]

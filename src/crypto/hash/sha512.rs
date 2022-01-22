@@ -54,38 +54,36 @@ mod test {
         let Digest(h1) = streaming_hash(&x);
         let chunks = x.split_at(x.len() / 2);
         let Digest(h2) = streaming_hash_chunks(vec![chunks.0, chunks.1]);
-        assert!(&h[..] == &h_expected[..]);
-        assert!(&h1[..] == &h_expected[..]);
-        assert!(&h2[..] == &h_expected[..]);
+        assert_eq!(&h[..], &h_expected[..]);
+        assert_eq!(&h1[..], &h_expected[..]);
+        assert_eq!(&h2[..], &h_expected[..]);
     }
 
     fn test_nist_vector(filename: &str) {
-        use rustc_serialize::hex::FromHex;
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
         let mut r = BufReader::new(File::open(filename).unwrap());
         let mut line = String::new();
-        loop {
-            line.clear();
-            r.read_line(&mut line).unwrap();
-            if line.len() == 0 {
+
+        while let Ok(len) = r.read_line(&mut line) {
+            if len == 0 {
                 break;
             }
-            let starts_with_len = line.starts_with("Len = ");
-            if starts_with_len {
+            if line.starts_with("Len = ") {
                 let len: usize = line[6..].trim().parse().unwrap();
                 line.clear();
                 r.read_line(&mut line).unwrap();
-                let rawmsg = line[6..].from_hex().unwrap();
+                let rawmsg = hex::decode(line[6..].trim_end()).unwrap();
                 let msg = &rawmsg[..len / 8];
                 line.clear();
                 r.read_line(&mut line).unwrap();
-                let md = line[5..].from_hex().unwrap();
+                let md = hex::decode(line[5..].trim_end()).unwrap();
                 let Digest(digest) = hash(msg);
                 let Digest(digest1) = streaming_hash(msg);
-                assert!(&digest[..] == &md[..]);
-                assert!(&digest1[..] == &md[..]);
+                assert_eq!(&digest[..], &md[..]);
+                assert_eq!(&digest1[..], &md[..]);
+                line.clear();
             }
         }
     }
@@ -99,7 +97,7 @@ mod test {
         loop {
             let mut buf = [0; 512];
             let len = r.read(&mut buf).unwrap();
-            if len <= 0 {
+            if len == 0 {
                 break;
             }
             s.update(&buf[..len]);
@@ -119,20 +117,34 @@ mod test {
 
     #[test]
     fn test_streaming_hashing() {
-        use rustc_serialize::hex::FromHex;
-
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA512ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA512LongMsg.rsp");
 
         let (real_short, real_long) = if cfg!(unix) {
             (
-                "c0fa02fa36680458c0143a1b837eb87eefc7bbec299f1b1ec2bc304ebf516bacc5020bc04a94fe00fb3dcec64b938bf347ed45431dec3dc2a2e8bb4d89e785cf".from_hex().unwrap(),
-                "1e77643d79d0836b97fae313393f01cdc639ab20c97dc56f60a303e25a73d8afd4ad4e08fb1d45b0b2ce20ce64d63a82e1f750ba797435120c02f94d0404c015".from_hex().unwrap()
+                hex::decode(
+                    "c0fa02fa36680458c0143a1b837eb87eefc7bbec299f1b1ec2bc304ebf516ba\
+                    cc5020bc04a94fe00fb3dcec64b938bf347ed45431dec3dc2a2e8bb4d89e785cf",
+                )
+                .unwrap(),
+                hex::decode(
+                    "1e77643d79d0836b97fae313393f01cdc639ab20c97dc56f60a303e25a73d8a\
+                    fd4ad4e08fb1d45b0b2ce20ce64d63a82e1f750ba797435120c02f94d0404c015",
+                )
+                .unwrap(),
             )
         } else {
             (
-                "ef27a9fcbeb037d00bed853f496588d456d8caee85669f3a4e77dd9fd406da0742a04fdcaeca0cc64d5f77877b51f363e0007038928c4654b4410aeb71d246cf".from_hex().unwrap(),
-                "2f91df6c65031255d529593a04b9166bb6842bb574eb18bad3d3be24fc7d1e9f6ffe0433ce029f91d81c91a3f741422373101408d723602ed7aa0862ac017323".from_hex().unwrap()
+                hex::decode(
+                    "ef27a9fcbeb037d00bed853f496588d456d8caee85669f3a4e77dd9fd406da0\
+                    742a04fdcaeca0cc64d5f77877b51f363e0007038928c4654b4410aeb71d246cf",
+                )
+                .unwrap(),
+                hex::decode(
+                    "2f91df6c65031255d529593a04b9166bb6842bb574eb18bad3d3be24fc7d1e9\
+                    f6ffe0433ce029f91d81c91a3f741422373101408d723602ed7aa0862ac017323",
+                )
+                .unwrap(),
             )
         };
 

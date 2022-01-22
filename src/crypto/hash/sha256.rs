@@ -50,9 +50,9 @@ mod test {
         let Digest(h) = hash(&x);
         let Digest(h1) = streaming_hash(&x);
         let Digest(h2) = streaming_hash_chunks(vec![&[], &[]]);
-        assert!(h == h_expected);
-        assert!(h1 == h_expected);
-        assert!(h2 == h_expected);
+        assert_eq!(h, h_expected);
+        assert_eq!(h1, h_expected);
+        assert_eq!(h2, h_expected);
     }
 
     #[test]
@@ -73,38 +73,38 @@ mod test {
         let Digest(h1) = streaming_hash(&x);
         let chunks = x.split_at(x.len() / 2);
         let Digest(h2) = streaming_hash_chunks(vec![chunks.0, chunks.1]);
-        assert!(h == h_expected);
-        assert!(h1 == h_expected);
-        assert!(h2 == h_expected);
+        assert_eq!(h, h_expected);
+        assert_eq!(h1, h_expected);
+        assert_eq!(h2, h_expected);
     }
 
     fn test_nist_vector(filename: &str) {
-        use rustc_serialize::hex::FromHex;
-        use std::fs::File;
-        use std::io::{BufRead, BufReader};
+        use std::{
+            fs::File,
+            io::{BufRead, BufReader},
+        };
 
         let mut r = BufReader::new(File::open(filename).unwrap());
         let mut line = String::new();
-        loop {
-            line.clear();
-            r.read_line(&mut line).unwrap();
-            if line.len() == 0 {
+
+        while let Ok(len) = r.read_line(&mut line) {
+            if len == 0 {
                 break;
             }
-            let starts_with_len = line.starts_with("Len = ");
-            if starts_with_len {
+            if line.starts_with("Len = ") {
                 let len: usize = line[6..].trim().parse().unwrap();
                 line.clear();
                 r.read_line(&mut line).unwrap();
-                let rawmsg = line[6..].from_hex().unwrap();
+                let rawmsg = hex::decode(line[6..].trim_end()).unwrap();
                 let msg = &rawmsg[..len / 8];
                 line.clear();
                 r.read_line(&mut line).unwrap();
-                let md = line[5..].from_hex().unwrap();
+                let md = hex::decode(line[5..].trim_end()).unwrap();
                 let Digest(digest) = hash(msg);
                 let Digest(digest1) = streaming_hash(msg);
-                assert!(&digest[..] == &md[..]);
-                assert!(&digest1[..] == &md[..]);
+                assert_eq!(&digest[..], &md[..]);
+                assert_eq!(&digest1[..], &md[..]);
+                line.clear();
             }
         }
     }
@@ -117,7 +117,7 @@ mod test {
         let mut s = State::init();
         let mut buf = [0; 512];
         while let Ok(len) = r.read(&mut buf) {
-            if len <= 0 {
+            if len == 0 {
                 break;
             }
             s.update(&buf[..len]);
@@ -137,27 +137,21 @@ mod test {
 
     #[test]
     fn test_streaming_hashing() {
-        use rustc_serialize::hex::FromHex;
-
         let Digest(hash_short) = test_hash_for_file("testvectors/SHA256ShortMsg.rsp");
         let Digest(hash_long) = test_hash_for_file("testvectors/SHA256LongMsg.rsp");
 
         let (real_short, real_long) = if cfg!(unix) {
             (
-                "49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8"
-                    .from_hex()
+                hex::decode("49f6d54d0750bbff511e915b1045c9dd7363c3005f8498c3804956805d72c5f8")
                     .unwrap(),
-                "12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b"
-                    .from_hex()
+                hex::decode("12e92098fbd93fb6ebad3ff15e9592a3800d90a69cd5382f7b055132282b143b")
                     .unwrap(),
             )
         } else {
             (
-                "2fe1398dfaa6635656d5b4e3956eb87258f6ab2c19050b8b8f2fd5f715160025"
-                    .from_hex()
+                hex::decode("2fe1398dfaa6635656d5b4e3956eb87258f6ab2c19050b8b8f2fd5f715160025")
                     .unwrap(),
-                "23297bf12788e13732763abcf39874f24332024ee31038e0858dbe9224722314"
-                    .from_hex()
+                hex::decode("23297bf12788e13732763abcf39874f24332024ee31038e0858dbe9224722314")
                     .unwrap(),
             )
         };
