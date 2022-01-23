@@ -66,9 +66,8 @@ pub fn gen_nonce() -> Nonce {
 /// nonce `n`.  It returns a ciphertext `c`.
 pub fn seal(m: &[u8], &Nonce(ref n): &Nonce, &Key(ref k): &Key) -> Vec<u8> {
     let clen = m.len() + MACBYTES;
-    let mut c = Vec::with_capacity(clen);
+    let mut c = vec![0; clen];
     unsafe {
-        c.set_len(clen);
         ffi::crypto_secretbox_easy(c.as_mut_ptr(), m.as_ptr(), m.len() as u64, n, k);
     }
     c
@@ -159,7 +158,7 @@ mod test {
             for i in 0..c.len() {
                 c[i] ^= 0x20;
                 // Test the combined mode.
-                assert_eq!(Err(()), open(&mut c, &n, &k));
+                assert_eq!(Err(()), open(&c, &n, &k));
                 // Test the detached mode.
                 let tag = Tag::from_slice(&c[..MACBYTES]).unwrap();
                 assert_eq!(Err(()), open_detached(&mut c[MACBYTES..], &tag, &n, &k));

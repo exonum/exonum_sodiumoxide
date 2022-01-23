@@ -205,6 +205,7 @@ pub struct State(ffi::crypto_sign_ed25519ph_state);
 
 impl State {
     /// `init()` initialize a streaming signing state.
+    #[allow(clippy::uninit_assumed_init)]
     pub fn init() -> State {
         unsafe {
             let mut s = mem::MaybeUninit::uninit().assume_init();
@@ -310,7 +311,7 @@ mod test {
             let mut sm = sign(&m, &sk);
             for j in 0..sm.len() {
                 sm[j] ^= 0x20;
-                assert!(Err(()) == verify(&mut sm, &pk));
+                assert!(Err(()) == verify(&sm, &pk));
                 sm[j] ^= 0x20;
             }
         }
@@ -367,7 +368,7 @@ mod test {
             let mut sm = sign(&m, &sk);
             for j in 0..sm.len() {
                 sm[j] ^= 0x20;
-                assert_eq!(Err(()), verify(&mut sm, &pk));
+                assert_eq!(Err(()), verify(&sm, &pk));
                 sm[j] ^= 0x20;
             }
         }
@@ -376,10 +377,10 @@ mod test {
     #[test]
     fn test_vectors() {
         // test vectors from the Python implementation
-        // from the [Ed25519 Homepage](http://ed25519.cr.yp.to/software.html)
-        use rustc_serialize::hex::{FromHex, ToHex};
-        use std::fs::File;
-        use std::io::{BufRead, BufReader};
+        use std::{
+            fs::File,
+            io::{BufRead, BufReader},
+        };
 
         let r = BufReader::new(File::open("testvectors/ed25519.input").unwrap());
         for mline in r.lines() {
@@ -389,19 +390,19 @@ mod test {
             let x1 = x.next().unwrap();
             let x2 = x.next().unwrap();
             let x3 = x.next().unwrap();
-            let seed_bytes = x0[..64].from_hex().unwrap();
-            assert!(seed_bytes.len() == SEEDBYTES);
+            let seed_bytes = hex::decode(&x0[..64]).unwrap();
+            assert_eq!(seed_bytes.len(), SEEDBYTES);
             let mut seedbuf = [0u8; SEEDBYTES];
             for (s, b) in seedbuf.iter_mut().zip(seed_bytes.iter()) {
                 *s = *b
             }
             let seed = Seed(seedbuf);
             let (pk, sk) = keypair_from_seed(&seed);
-            let m = x2.from_hex().unwrap();
+            let m = hex::decode(&x2).unwrap();
             let sm = sign(&m, &sk);
             verify(&sm, &pk).unwrap();
-            assert!(x1 == pk[..].to_hex());
-            assert!(x3 == sm.to_hex());
+            assert_eq!(x1, hex::encode(&pk[..]));
+            assert_eq!(x3, hex::encode(&sm));
         }
     }
 
@@ -409,9 +410,10 @@ mod test {
     fn test_vectors_detached() {
         // test vectors from the Python implementation
         // from the [Ed25519 Homepage](http://ed25519.cr.yp.to/software.html)
-        use rustc_serialize::hex::{FromHex, ToHex};
-        use std::fs::File;
-        use std::io::{BufRead, BufReader};
+        use std::{
+            fs::File,
+            io::{BufRead, BufReader},
+        };
 
         let r = BufReader::new(File::open("testvectors/ed25519.input").unwrap());
         for mline in r.lines() {
@@ -421,20 +423,20 @@ mod test {
             let x1 = x.next().unwrap();
             let x2 = x.next().unwrap();
             let x3 = x.next().unwrap();
-            let seed_bytes = x0[..64].from_hex().unwrap();
-            assert!(seed_bytes.len() == SEEDBYTES);
+            let seed_bytes = hex::decode(&x0[..64]).unwrap();
+            assert_eq!(seed_bytes.len(), SEEDBYTES);
             let mut seedbuf = [0u8; SEEDBYTES];
             for (s, b) in seedbuf.iter_mut().zip(seed_bytes.iter()) {
                 *s = *b
             }
             let seed = Seed(seedbuf);
             let (pk, sk) = keypair_from_seed(&seed);
-            let m = x2.from_hex().unwrap();
+            let m = hex::decode(&x2).unwrap();
             let sig = sign_detached(&m, &sk);
             assert!(verify_detached(&sig, &m, &pk));
-            assert!(x1 == pk[..].to_hex());
-            let sm = sig[..].to_hex() + x2; // x2 is m hex encoded
-            assert!(x3 == sm);
+            assert_eq!(x1, hex::encode(&pk[..]));
+            let sm = hex::encode(&sig[..]) + x2; // x2 is m hex encoded
+            assert_eq!(x3, sm);
         }
     }
 
