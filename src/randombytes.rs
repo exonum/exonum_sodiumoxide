@@ -10,12 +10,12 @@ use std::iter::repeat;
 /// called `sodiumoxide::init()` once before using any other function
 /// from sodiumoxide.
 pub fn randombytes(size: usize) -> Vec<u8> {
-    unsafe {
+    
         let mut buf: Vec<u8> = repeat(0u8).take(size).collect();
         let pbuf = buf.as_mut_ptr();
-        ffi::randombytes_buf(pbuf, size);
+        unsafe {ffi::randombytes_buf(pbuf, size)};
         buf
-    }
+    
 }
 
 /// `randombytes_into()` fills a buffer `buf` with random data.
