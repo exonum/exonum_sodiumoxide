@@ -44,14 +44,14 @@ pub fn gen_key() -> Key {
 /// The function returns an authenticator tag.
 pub fn authenticate(m: &[u8],
                     &Key(ref k): &Key) -> Tag {
-    unsafe {
+    
         let mut tag = [0; TAGBYTES];
-        $auth_name(&mut tag,
+        unsafe {$auth_name(&mut tag,
                    m.as_ptr(),
                    m.len() as c_ulonglong,
-                   k);
+                   k)};
         Tag(tag)
-    }
+    
 }
 
 /// `verify()` returns `true` if `tag` is a correct authenticator of message `m`
@@ -198,8 +198,8 @@ pub struct State($state_name);
 impl Drop for State {
     fn drop(&mut self) {
         let &mut State(ref mut s) = self;
+        let sp: *mut $state_name = s;
         unsafe {
-            let sp: *mut $state_name = s;
             ffi::sodium_memzero(sp as *mut u8, mem::size_of_val(s));
         }
     }
@@ -226,12 +226,12 @@ impl State {
 
     /// `finalize()` finalizes the authenticator computation and returns a `Tag`.
     pub fn finalize(&mut self) -> Tag {
-        unsafe {
+       
             let &mut State(ref mut state) = self;
             let mut tag = [0; $tagbytes as usize];
-            $final_name(state, &mut tag);
+            unsafe {$final_name(state, &mut tag)};
             Tag(tag)
-        }
+        
     }
 }
 
