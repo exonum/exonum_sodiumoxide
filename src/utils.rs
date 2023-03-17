@@ -46,7 +46,7 @@ mod test {
         use crate::randombytes::randombytes;
 
         for i in 0usize..256 {
-            let x = randombytes(i);
+            let x = unsafe { randombytes(i) };
             assert!(memcmp(&x, &x));
             let mut y = x.clone();
             assert!(memcmp(&x, &y));
@@ -54,7 +54,7 @@ mod test {
             assert!(!memcmp(&x, &y));
             assert!(!memcmp(&y, &x));
 
-            y = randombytes(i);
+            y = unsafe { randombytes(i) };
             if x == y {
                 assert!(memcmp(&x, &y))
             } else {

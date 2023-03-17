@@ -135,7 +135,7 @@ mod test {
         use crate::test_utils::round_trip;
         for i in 0..64usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let d = shorthash(&m[..], &k);
             round_trip(k);
             round_trip(d);
@@ -155,7 +155,7 @@ mod bench {
     #[bench]
     fn bench_shorthash(b: &mut test::Bencher) {
         let k = gen_key();
-        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
+        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| unsafe { randombytes(*s) }).collect();
         b.iter(|| {
             for m in ms.iter() {
                 shorthash(m, &k);

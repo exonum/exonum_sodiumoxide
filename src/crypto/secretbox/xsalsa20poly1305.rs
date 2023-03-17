@@ -140,7 +140,7 @@ mod test {
     fn test_seal_open() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let c = seal(&m, &n, &k);
             let opened = open(&c, &n, &k);
@@ -152,7 +152,7 @@ mod test {
     fn test_seal_open_tamper() {
         for i in 0..32usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal(&m, &n, &k);
             for i in 0..c.len() {
@@ -171,7 +171,7 @@ mod test {
     fn test_seal_open_detached() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = m.clone();
             let tag = seal_detached(&mut buf, &n, &k);
@@ -184,7 +184,7 @@ mod test {
     fn test_seal_combined_then_open_detached() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal(&m, &n, &k);
             let tag = Tag::from_slice(&c[..MACBYTES]).unwrap();
@@ -198,7 +198,7 @@ mod test {
     fn test_seal_detached_then_open_combined() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = vec![0; MACBYTES];
             buf.extend_from_slice(&m);
@@ -213,7 +213,7 @@ mod test {
     fn test_seal_open_detached_tamper() {
         for i in 0..32usize {
             let k = gen_key();
-            let mut m = randombytes(i);
+            let mut m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut tag = seal_detached(&mut m, &n, &k);
             for j in 0..m.len() {
@@ -318,7 +318,7 @@ mod bench {
     fn bench_seal_open(b: &mut test::Bencher) {
         let k = gen_key();
         let n = gen_nonce();
-        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
+        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| unsafe { randombytes(*s) }).collect();
         b.iter(|| {
             for m in ms.iter() {
                 open(&seal(&m, &n, &k), &n, &k).unwrap();
