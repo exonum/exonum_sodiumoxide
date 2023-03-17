@@ -268,7 +268,7 @@ mod test {
     fn test_streaming_sign() {
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let mut creation_state = State::init();
             creation_state.update(&m);
             let sig = creation_state.finalize(&sk);
@@ -284,7 +284,7 @@ mod test {
         let mut creation_state = State::init();
         let mut validator_state = State::init();
         for i in 0..64usize {
-            let chunk = randombytes(i);
+            let chunk = unsafe { randombytes(i) };
             creation_state.update(&chunk);
             validator_state.update(&chunk);
         }
@@ -296,7 +296,7 @@ mod test {
     fn test_sign_verify() {
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let sm = sign(&m, &sk);
             let m2 = verify(&sm, &pk);
             assert!(Ok(m) == m2);
@@ -307,7 +307,7 @@ mod test {
     fn test_sign_verify_tamper() {
         for i in 0..32usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let mut sm = sign(&m, &sk);
             for j in 0..sm.len() {
                 sm[j] ^= 0x20;
@@ -321,7 +321,7 @@ mod test {
     fn test_sign_verify_detached() {
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let sig = sign_detached(&m, &sk);
             assert!(verify_detached(&sig, &m, &pk));
         }
@@ -331,7 +331,7 @@ mod test {
     fn test_sign_verify_detached_tamper() {
         for i in 0..32usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let Signature(mut sig) = sign_detached(&m, &sk);
             for j in 0..SIGNATUREBYTES {
                 sig[j] ^= 0x20;
@@ -349,7 +349,7 @@ mod test {
             randombytes_into(&mut seedbuf);
             let seed = Seed(seedbuf);
             let (pk, sk) = keypair_from_seed(&seed);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let sm = sign(&m, &sk);
             let m2 = verify(&sm, &pk);
             assert!(Ok(m) == m2);
@@ -364,7 +364,7 @@ mod test {
             randombytes_into(&mut seedbuf);
             let seed = Seed(seedbuf);
             let (pk, sk) = keypair_from_seed(&seed);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let mut sm = sign(&m, &sk);
             for j in 0..sm.len() {
                 sm[j] ^= 0x20;
@@ -446,7 +446,7 @@ mod test {
         use crate::test_utils::round_trip;
         for i in 0..256usize {
             let (pk, sk) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let sig = sign_detached(&m, &sk);
             round_trip(pk);
             round_trip(sk);
@@ -494,7 +494,7 @@ mod bench {
     #[bench]
     fn bench_sign(b: &mut test::Bencher) {
         let (_, sk) = gen_keypair();
-        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
+        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| unsafe { randombytes(*s) }).collect();
         b.iter(|| {
             for m in ms.iter() {
                 sign(m, &sk);
@@ -508,7 +508,7 @@ mod bench {
         let sms: Vec<Vec<u8>> = BENCH_SIZES
             .iter()
             .map(|s| {
-                let m = randombytes(*s);
+                let m = unsafe { randombytes(*s) };
                 sign(&m, &sk)
             })
             .collect();

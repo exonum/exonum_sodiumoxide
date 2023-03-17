@@ -65,7 +65,7 @@ mod test {
     fn test_seal_open() {
         for i in 0..256usize {
             let (pk, sk) = box_::gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let c = seal(&m, &pk);
             let opened = open(&c, &pk, &sk);
             assert!(Ok(m) == opened);
@@ -76,7 +76,7 @@ mod test {
     fn test_seal_open_tamper() {
         for i in 0..32usize {
             let (pk, sk) = box_::gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let mut c = seal(&m, &pk);
             for j in 0..c.len() {
                 c[j] ^= 0x20;

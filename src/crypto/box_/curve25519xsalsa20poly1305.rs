@@ -292,7 +292,7 @@ mod test {
         for i in 0..256usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let c = seal(&m, &n, &pk1, &sk2);
             let opened = open(&c, &n, &pk2, &sk1);
@@ -310,7 +310,7 @@ mod test {
             let k2 = precompute(&pk2, &sk1);
             let PrecomputedKey(k2buf) = k2;
             assert!(k1buf == k2buf);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let c = seal_precomputed(&m, &n, &k1);
             let opened = open_precomputed(&c, &n, &k2);
@@ -323,7 +323,7 @@ mod test {
         for i in 0..32usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal(&m, &n, &pk1, &sk2);
             for j in 0..c.len() {
@@ -341,7 +341,7 @@ mod test {
             let (pk2, sk2) = gen_keypair();
             let k1 = precompute(&pk1, &sk2);
             let k2 = precompute(&pk2, &sk1);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal_precomputed(&m, &n, &k1);
             for j in 0..c.len() {
@@ -357,7 +357,7 @@ mod test {
         for i in 0..256usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = m.clone();
             let tag = seal_detached(&mut buf, &n, &pk1, &sk2);
@@ -371,7 +371,7 @@ mod test {
         for i in 0..256usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal(&m, &n, &pk1, &sk2);
             let tag = Tag::from_slice(&c[..MACBYTES]).unwrap();
@@ -386,7 +386,7 @@ mod test {
         for i in 0..256usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = vec![0; MACBYTES];
             buf.extend_from_slice(&m);
@@ -402,7 +402,7 @@ mod test {
         for i in 0..32usize {
             let (pk1, sk1) = gen_keypair();
             let (pk2, sk2) = gen_keypair();
-            let mut m = randombytes(i);
+            let mut m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut tag = seal_detached(&mut m, &n, &pk1, &sk2);
             for j in 0..m.len() {
@@ -446,7 +446,7 @@ mod test {
             let (pk2, sk2) = gen_keypair();
             let k1 = precompute(&pk1, &sk2);
             let k2 = precompute(&pk2, &sk1);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = m.clone();
             let tag = seal_detached_precomputed(&mut buf, &n, &k1);
@@ -462,7 +462,7 @@ mod test {
             let (pk2, sk2) = gen_keypair();
             let k1 = precompute(&pk1, &sk2);
             let k2 = precompute(&pk2, &sk1);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut c = seal_precomputed(&m, &n, &k1);
             let tag = Tag::from_slice(&c[..MACBYTES]).unwrap();
@@ -479,7 +479,7 @@ mod test {
             let (pk2, sk2) = gen_keypair();
             let k1 = precompute(&pk1, &sk2);
             let k2 = precompute(&pk2, &sk1);
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut buf = vec![0; MACBYTES];
             buf.extend_from_slice(&m);
@@ -497,7 +497,7 @@ mod test {
             let (pk2, sk2) = gen_keypair();
             let k1 = precompute(&pk1, &sk2);
             let k2 = precompute(&pk2, &sk1);
-            let mut m = randombytes(i);
+            let mut m = unsafe { randombytes(i) };
             let n = gen_nonce();
             let mut tag = seal_detached_precomputed(&mut m, &n, &k1);
             for j in 0..m.len() {
@@ -661,7 +661,7 @@ mod bench {
     fn bench_seal_open(b: &mut test::Bencher) {
         let (pk, sk) = gen_keypair();
         let n = gen_nonce();
-        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| randombytes(*s)).collect();
+        let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| unsafe {randombytes(*s)}).collect();
         b.iter(|| {
             for m in ms.iter() {
                 open(&seal(m, &n, &pk, &sk), &n, &pk, &sk).unwrap();

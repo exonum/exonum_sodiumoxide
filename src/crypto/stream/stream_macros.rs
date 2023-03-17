@@ -115,7 +115,7 @@ mod test_m {
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let c = stream_xor(&m, &n, &k);
             let m2 = stream_xor(&c, &n, &k);
             assert!(m == m2);
@@ -127,7 +127,7 @@ mod test_m {
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let mut c = m.clone();
             let s = stream(c.len(), &n, &k);
             for (e, v) in c.iter_mut().zip(s.iter()) {
@@ -143,7 +143,7 @@ mod test_m {
         for i in 0..1024usize {
             let k = gen_key();
             let n = gen_nonce();
-            let mut m = randombytes(i);
+            let mut m = unsafe { randombytes(i) };
             let mut c = m.clone();
             let s = stream(c.len(), &n, &k);
             for (e, v) in c.iter_mut().zip(s.iter()) {

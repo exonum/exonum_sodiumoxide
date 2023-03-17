@@ -85,7 +85,7 @@ mod test_m {
     fn test_auth_verify_tamper() {
         for i in 0..32usize {
             let k = gen_key();
-            let mut m = randombytes(i);
+            let mut m = unsafe { randombytes(i) };
             let Tag(mut tagbuf) = authenticate(&m, &k);
             for j in 0..m.len() {
                 m[j] ^= 0x20;
@@ -106,7 +106,7 @@ mod test_m {
         use crate::test_utils::round_trip;
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let tag = authenticate(&m, &k);
             round_trip(k);
             round_trip(tag);
@@ -128,7 +128,7 @@ mod bench_m {
     fn bench_auth(b: &mut test::Bencher) {
         let k = gen_key();
         let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| {
-            randombytes(*s)
+            unsafe { randombytes(*s) }
         }).collect();
         b.iter(|| {
             for m in ms.iter() {
@@ -141,7 +141,7 @@ mod bench_m {
     fn bench_verify(b: &mut test::Bencher) {
         let k = gen_key();
         let ms: Vec<Vec<u8>> = BENCH_SIZES.iter().map(|s| {
-            randombytes(*s)
+            unsafe { randombytes(*s) }
         }).collect();
         let tags: Vec<Tag> = ms.iter().map(|m| {
             authenticate(&m, &k)
@@ -244,7 +244,7 @@ mod test_s {
     fn test_auth_eq_auth_state() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let tag = authenticate(&m, &k);
             let mut state = State::init(&k[..]);
             state.update(&m);
@@ -257,7 +257,7 @@ mod test_s {
     fn test_auth_eq_auth_state_chunked() {
         for i in 0..256usize {
             let k = gen_key();
-            let m = randombytes(i);
+            let m = unsafe { randombytes(i) };
             let tag = authenticate(&m, &k);
             let mut state = State::init(&k[..]);
             for c in m.chunks(1) {

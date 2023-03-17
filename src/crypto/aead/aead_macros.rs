@@ -179,8 +179,8 @@ mod test_m {
         for i in 0..256usize {
             let k = gen_key();
             let n = gen_nonce();
-            let ad = randombytes(i);
-            let m = randombytes(i);
+            let ad = unsafe { randombytes(i) };
+            let m = unsafe { randombytes(i) };
             let c = seal(&m, Some(&ad), &n, &k);
             let m2 = open(&c, Some(&ad), &n, &k).unwrap();
             assert_eq!(m, m2);
@@ -192,8 +192,8 @@ mod test_m {
         for i in 0..32usize {
             let k = gen_key();
             let n = gen_nonce();
-            let mut ad = randombytes(i);
-            let m = randombytes(i);
+            let mut ad = unsafe { randombytes(i) };
+            let m = unsafe { randombytes(i) };
             let mut c = seal(&m, Some(&ad), &n, &k);
             for j in 0..c.len() {
                 c[j] ^= 0x20;
@@ -215,8 +215,8 @@ mod test_m {
         for i in 0..256usize {
             let k = gen_key();
             let n = gen_nonce();
-            let ad = randombytes(i);
-            let mut m = randombytes(i);
+            let ad = unsafe { randombytes(i) };
+            let mut m = unsafe { randombytes(i) };
             let m2 = m.clone();
             let t = seal_detached(&mut m, Some(&ad), &n, &k);
             open_detached(&mut m, Some(&ad), &t, &n, &k).unwrap();
@@ -229,8 +229,8 @@ mod test_m {
         for i in 0..32usize {
             let k = gen_key();
             let n = gen_nonce();
-            let mut ad = randombytes(i);
-            let mut m = randombytes(i);
+            let mut ad = unsafe { randombytes(i) };
+            let mut m = unsafe { randombytes(i) };
             let mut t = seal_detached(&mut m, Some(&ad), &n, &k);
             for j in 0..m.len() {
                 m[j] ^= 0x20;
@@ -258,8 +258,8 @@ mod test_m {
         for i in 0..256usize {
             let k = gen_key();
             let n = gen_nonce();
-            let ad = randombytes(i);
-            let mut m = randombytes(i);
+            let ad = unsafe { randombytes(i) };
+            let mut m = unsafe { randombytes(i) };
 
             let c = seal(&m, Some(&ad), &n, &k);
             let t = seal_detached(&mut m, Some(&ad), &n, &k);

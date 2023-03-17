@@ -9,13 +9,11 @@ use std::iter::repeat;
 /// THREAD SAFETY: `randombytes()` is thread-safe provided that you have
 /// called `sodiumoxide::init()` once before using any other function
 /// from sodiumoxide.
-pub fn randombytes(size: usize) -> Vec<u8> {
-    unsafe {
-        let mut buf: Vec<u8> = repeat(0u8).take(size).collect();
-        let pbuf = buf.as_mut_ptr();
-        ffi::randombytes_buf(pbuf, size);
-        buf
-    }
+pub unsafe fn randombytes(size: usize) -> Vec<u8> {
+    let mut buf: Vec<u8> = repeat(0u8).take(size).collect();
+    let pbuf = buf.as_mut_ptr();
+    ffi::randombytes_buf(pbuf, size);
+    buf
 }
 
 /// `randombytes_into()` fills a buffer `buf` with random data.

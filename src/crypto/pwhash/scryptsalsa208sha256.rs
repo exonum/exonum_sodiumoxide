@@ -210,7 +210,7 @@ mod test {
     #[test]
     fn test_pwhash_verify() {
         for i in 0..32usize {
-            let pw = randombytes(i);
+            let pw = unsafe { randombytes(i) };
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();
             assert!(pwhash_verify(&pwh, &pw));
         }
@@ -219,7 +219,7 @@ mod test {
     #[test]
     fn test_pwhash_verify_tamper() {
         for i in 0..16usize {
-            let mut pw = randombytes(i);
+            let mut pw = unsafe { randombytes(i) };
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();
             for j in 0..pw.len() {
                 pw[j] ^= 0x20;
@@ -234,7 +234,7 @@ mod test {
     fn test_serialisation() {
         use crate::test_utils::round_trip;
         for i in 0..32usize {
-            let pw = randombytes(i);
+            let pw = unsafe { randombytes(i) };
             let pwh = pwhash(&pw, OPSLIMIT_INTERACTIVE, MEMLIMIT_INTERACTIVE).unwrap();
             let salt = gen_salt();
             round_trip(pwh);
